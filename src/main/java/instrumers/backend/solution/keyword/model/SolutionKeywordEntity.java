@@ -1,6 +1,7 @@
 package instrumers.backend.solution.keyword.model;
 
-import instrumers.backend.user.base.model.UserEntity;
+import instrumers.backend.base.BaseTimeEntity;
+import instrumers.backend.solution.base.model.SolutionEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,16 +22,16 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @SuperBuilder
-public class KeywordEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "keyword_seq")
-	private Long keywordSeq;
+public class SolutionKeywordEntity extends BaseTimeEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "solution_keyword_seq")
+    private Long solutionKeywordSeq;
 
-	@Column(name = "keyword", nullable = false, unique = false)
-	private String keyword;
+    @Column(name = "keyword", nullable = false, unique = false)
+    private String keyword;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "uesr_seq", nullable = false, unique = false)
-	private UserEntity userEntity;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "solution_seq", nullable = false)
+    private SolutionEntity solutionEntity;
 }

@@ -1,5 +1,6 @@
 package instrumers.backend.user.consumer.model;
 
+import instrumers.backend.base.BaseTimeEntity;
 import instrumers.backend.user.base.model.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @SuperBuilder
-public class ConsumerEntity {
+public class ConsumerEntity extends BaseTimeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "consumer_seq")
@@ -36,7 +37,7 @@ public class ConsumerEntity {
 	private String userName;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "uesr_seq", nullable = false, unique = false)
+	@JoinColumn(name = "user_seq", nullable = false)
 	private UserEntity userEntity;
 
 	@Version

@@ -1,5 +1,6 @@
 package instrumers.backend.user.vendor.model;
 
+import instrumers.backend.base.BaseTimeEntity;
 import instrumers.backend.user.base.model.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,7 +24,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @SuperBuilder
-public class VendorEntity {
+public class VendorEntity extends BaseTimeEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(name = "vendor_seq")
@@ -39,7 +40,7 @@ public class VendorEntity {
 	private String businessImage;
 
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "uesr_seq", nullable = false, unique = false)
+	@JoinColumn(name = "user_seq", nullable = false)
 	private UserEntity userEntity;
 
 	@Version
