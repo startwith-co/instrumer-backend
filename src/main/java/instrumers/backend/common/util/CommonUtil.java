@@ -4,4 +4,5 @@ public class CommonUtil {
     public static final String WHITE_KEY_FMT = "auth:whitelist:%s";
     public static final String BLACK_KEY_FMT = "auth:blacklist:%s";
     public static final String EMAIL_AUTH_KEY_FMT = "auth:email:%s";
+    public static final String S3_PRESIGNED_URL_FMT = "s3:presigned:%s";
 }

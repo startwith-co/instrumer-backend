@@ -1,5 +1,8 @@
 package instrumers.backend.common.service;
 
+import com.amazonaws.HttpMethod;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import instrumers.backend.exception.BadRequestException;
 import instrumers.backend.exception.ServerException;
 import io.jsonwebtoken.Claims;
@@ -17,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -40,6 +44,7 @@ public class CommonService {
     private final RedisTemplate<String, String> redisTemplate;
     private final TemplateEngine templateEngine;
     private final JavaMailSender javaMailSender;
+    private final AmazonS3Client amazonS3Client;
 
     /**
      * 지정된 만료 시간과 사용자 정보를 기반으로 JWT 토큰을 발급합니다.
@@ -282,5 +287,37 @@ public class CommonService {
         redisTemplate.delete(redisKey);
 
         return true;
+    }
+
+    /**
+     * S3 Presigned URL을 생성합니다.
+     *
+     * @param fileName   S3에 저장될 파일명
+     * @param httpMethod HTTP 메서드 (PUT: 업로드, GET: 다운로드)
+     * @param expiration 만료 시간 (분 단위)
+     * @return 생성된 Presigned URL
+     * @throws ServerException Presigned URL 생성 실패 시
+     */
+    public String generatePresignedUrl(String fileName, HttpMethod httpMethod, int expiration) {
+        try {
+            Date expirationDate = new Date();
+            long expTimeMillis = expirationDate.getTime();
+            expTimeMillis += 1000L * 60 * expiration; // 분을 밀리초로 변환
+            expirationDate.setTime(expTimeMillis);
+
+            GeneratePresignedUrlRequest generatePresignedUrlRequest =
+                    new GeneratePresignedUrlRequest(bucketName, fileName)
+                            // .withMethod(HttpMethod)
+                            .withMethod(HttpMethod.PUT)
+                            .withExpiration(expirationDate);
+
+            URL url = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
+            return url.toString();
+        } catch (Exception e) {
+            throw new ServerException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Presigned URL 생성 중 오류가 발생했습니다: " + e.getMessage()
+            );
+        }
     }
 }

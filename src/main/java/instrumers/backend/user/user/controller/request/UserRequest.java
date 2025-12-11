@@ -1,7 +1,9 @@
 package instrumers.backend.user.user.controller.request;
 
+import com.amazonaws.HttpMethod;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public class UserRequest {
     public record LoginUserRequest(
@@ -34,6 +36,15 @@ public class UserRequest {
 
             @NotBlank(message = "인증번호는 필수 입력값입니다.")
             String authCode
+    ) {
+    }
+
+    public record PresignedURLRequest(
+            @NotBlank(message = "S3에 저장될 파일명은 필수 입력값입니다.")
+            String fileName,
+
+            @NotNull(message = "만료시간(분)은 필수 입력값입니다.")
+            int expiration
     ) {
     }
 }
