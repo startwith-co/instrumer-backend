@@ -1,11 +1,11 @@
-package instrumers.backend.solution.base.model;
+package instrumers.backend.solution.solution.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import instrumers.backend.base.BaseTimeEntity;
-import instrumers.backend.solution.base.util.SolutionCategory;
+import instrumers.backend.solution.solution.util.SolutionCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,7 +1,7 @@
 package instrumers.backend.solution.plan.model;
 
 import instrumers.backend.base.BaseTimeEntity;
-import instrumers.backend.solution.base.model.SolutionEntity;
+import instrumers.backend.solution.solution.model.SolutionEntity;
 import instrumers.backend.solution.plan.util.PlanType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

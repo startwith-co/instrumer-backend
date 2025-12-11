@@ -19,8 +19,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static instrumers.backend.exception.code.ExceptionCodeMapper.*;
-
 @Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -63,8 +61,6 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .orElse("요청 데이터 검증에 실패했습니다.");
 
-        String code = getCode(errorMessage, ExceptionType.BAD_REQUEST);
-
         String methodName = exception.getStackTrace().length > 0
                 ? exception.getStackTrace()[0].toString()
                 : "UNKNOWN";
@@ -85,7 +81,6 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(final Exception exception, final HttpServletRequest request) {
-        String code = getCode(exception.getMessage(), ExceptionType.SERVER);
         String methodName = exception.getStackTrace().length > 0
                 ? exception.getStackTrace()[0].toString()
                 : "UNKNOWN";

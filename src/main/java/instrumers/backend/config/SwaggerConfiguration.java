@@ -30,10 +30,9 @@ public class SwaggerConfiguration {
         server.setUrl(serverUrl);
 
         return new OpenAPI()
-                .components(new Components())
+                .components(components)
                 .info(apiInfo())
                 .addSecurityItem(securityRequirement)
-                .components(components)
                 .addServersItem(server);
     }
 

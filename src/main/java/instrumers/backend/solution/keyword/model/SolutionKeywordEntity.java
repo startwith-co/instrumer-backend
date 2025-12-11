@@ -1,7 +1,7 @@
 package instrumers.backend.solution.keyword.model;
 
 import instrumers.backend.base.BaseTimeEntity;
-import instrumers.backend.solution.base.model.SolutionEntity;
+import instrumers.backend.solution.solution.model.SolutionEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
