@@ -81,14 +81,17 @@ dependencies {
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect'
 
     // Redis
-    // implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    // implementation "org.redisson:redisson-spring-boot-starter:3.32.0"
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation "org.redisson:redisson-spring-boot-starter:3.32.0"
 
     // Security
-    //  implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
 
     // WebSocket
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    //이메일 발송
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {

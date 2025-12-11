@@ -2,7 +2,7 @@ package instrumers.backend.solution.review.model;
 
 import instrumers.backend.base.BaseTimeEntity;
 import instrumers.backend.solution.base.model.SolutionEntity;
-import instrumers.backend.user.base.model.UserEntity;
+import instrumers.backend.user.user.model.UserEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

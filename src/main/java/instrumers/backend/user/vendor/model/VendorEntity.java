@@ -1,7 +1,7 @@
 package instrumers.backend.user.vendor.model;
 
 import instrumers.backend.base.BaseTimeEntity;
-import instrumers.backend.user.base.model.UserEntity;
+import instrumers.backend.user.user.model.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -25,26 +25,29 @@ import lombok.experimental.SuperBuilder;
 @Getter
 @SuperBuilder
 public class VendorEntity extends BaseTimeEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "vendor_seq")
-	private Long vendorSeq;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "vendor_seq")
+    private Long vendorSeq;
 
-	@Column(name = "vendor_name", nullable = false, unique = false)
-	private String vendorName;
+    @Column(name = "business_name", nullable = false, unique = false)
+    private String businessName;
 
-	@Column(name = "phone", nullable = false, unique = false)
-	private String phone;
+    @Column(name = "manager_name", nullable = false, unique = false)
+    private String managerName;
 
-	@Column(name = "business_image", nullable = false, unique = false)
-	private String businessImage;
+    @Column(name = "phone", nullable = false, unique = false)
+    private String phone;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_seq", nullable = false)
-	private UserEntity userEntity;
+    @Column(name = "business_image", nullable = false, unique = false)
+    private String businessImage;
 
-	@Version
-	@Builder.Default
-	@Column(name = "version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
-	private Integer version = 0;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_seq", nullable = false)
+    private UserEntity userEntity;
+
+    @Version
+    @Builder.Default
+    @Column(name = "version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
+    private Integer version = 0;
 }
