@@ -65,14 +65,4 @@ public class UserController {
 
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
     }
-
-    @PostMapping("/auth/presigned-url")
-    @Operation(summary = "업로드용 S3 Presigned URL 생성")
-    public ResponseEntity<BaseResponse<Map<String, String>>> presignedURL(@Valid @RequestBody PresignedURLRequest request) {
-        String presignedUrl = commonService.generatePresignedUrl(request.fileName(), HttpMethod.PUT, request.expiration());
-        Map<String, String> response = new HashMap<>();
-        response.put("presignedUrl", presignedUrl);
-
-        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-    }
 }
