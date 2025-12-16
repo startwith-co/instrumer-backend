@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static instrumers.backend.solution.solution.controller.request.SolutionRequest.*;
 import static instrumers.backend.solution.solution.controller.response.SolutionResponse.*;
+import static instrumers.backend.solution.solution.controller.response.SolutionResponse.GetSolutionResponse.*;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +58,7 @@ public class SolutionService {
         request.images().forEach(image -> solutionImageRepository.save(SolutionImageEntity.builder()
                 .imageUrl(image.imageUrl())
                 .imageType(image.imageType())
-                .solution(solutionEntity)
+                .solutionEntity(solutionEntity)
                 .build()));
 
         if (request.plans() != null) {
@@ -88,5 +89,43 @@ public class SolutionService {
         }
 
         return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
+    }
+
+    @Transactional(readOnly = true)
+    public GetSolutionResponse get(Long userSeq, Long solutionSeq) {
+        userRepository.findByUserSeq(userSeq)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 회원입니다."
+                ));
+
+        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 솔루션입니다."
+                ));
+
+        return new GetSolutionResponse(
+                solutionEntity.getName(),
+                solutionEntity.getExplanation(),
+                solutionEntity.getCategory(),
+                solutionImageRepository.findAllBySolutionEntity(solutionEntity).stream()
+                        .map(image -> new CreateSolutionImageRequest(image.getImageUrl(), image.getImageType()))
+                        .toList(),
+                solutionPlanRepository.findAllBySolutionEntity(solutionEntity).stream()
+                        .map(plan -> new CreateSolutionPlanRequest(
+                                plan.getName(),
+                                plan.getSubName(),
+                                plan.getPrice(),
+                                plan.getPlanType(),
+                                solutionPlanDetailRepository.findAllBySolutionPlanEntity(plan).stream()
+                                        .map(detail -> new CreateSolutionPlanDetailRequest(detail.getName(), detail.getContext()))
+                                        .toList()
+                        ))
+                        .toList(),
+                solutionKeywordRepository.findAllBySolutionEntity(solutionEntity).stream()
+                        .map(SolutionKeywordEntity::getKeyword)
+                        .toList()
+        );
     }
 }

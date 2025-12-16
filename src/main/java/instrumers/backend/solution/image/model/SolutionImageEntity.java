@@ -28,5 +28,5 @@ public class SolutionImageEntity extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "solution_seq", nullable = false)
-    private SolutionEntity solution;
+    private SolutionEntity solutionEntity;
 }

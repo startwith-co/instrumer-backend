@@ -29,4 +29,13 @@ public class SolutionController {
 
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
+
+    @GetMapping()
+    @Operation(summary = "솔루션 개별 조회")
+    public ResponseEntity<BaseResponse<GetSolutionResponse>> get(HttpServletRequest httpServletRequest, @RequestParam(value = "solutionSeq") Long solutionSeq) {
+        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+        GetSolutionResponse response = solutionService.get(userSeq, solutionSeq);
+
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+    }
 }
