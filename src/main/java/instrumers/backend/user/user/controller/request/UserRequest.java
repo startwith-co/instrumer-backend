@@ -1,9 +1,7 @@
 package instrumers.backend.user.user.controller.request;
 
-import com.amazonaws.HttpMethod;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 public class UserRequest {
     public record LoginUserRequest(

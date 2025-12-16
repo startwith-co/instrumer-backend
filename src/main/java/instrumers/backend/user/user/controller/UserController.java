@@ -1,6 +1,5 @@
 package instrumers.backend.user.user.controller;
 
-import com.amazonaws.HttpMethod;
 import instrumers.backend.base.BaseResponse;
 import instrumers.backend.common.service.CommonService;
 import instrumers.backend.exception.BadRequestException;
