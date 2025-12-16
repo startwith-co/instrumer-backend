@@ -1,11 +1,11 @@
 package instrumers.backend.solution.solution.model;
 
+import instrumers.backend.user.user.model.UserEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
 import instrumers.backend.base.BaseTimeEntity;
-import instrumers.backend.solution.solution.util.SolutionCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,9 +32,12 @@ public class SolutionEntity extends BaseTimeEntity {
     @Column(name = "explanation", nullable = false, unique = false)
     private String explanation;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "category", nullable = false, unique = false)
-    private SolutionCategory category;
+    private String category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_seq", nullable = false)
+    private UserEntity userEntity;
 
     @Builder.Default
     @Column(name = "deleted", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")

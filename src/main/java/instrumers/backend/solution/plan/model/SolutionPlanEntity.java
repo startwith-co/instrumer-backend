@@ -2,7 +2,6 @@ package instrumers.backend.solution.plan.model;
 
 import instrumers.backend.base.BaseTimeEntity;
 import instrumers.backend.solution.solution.model.SolutionEntity;
-import instrumers.backend.solution.plan.util.PlanType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,9 +29,8 @@ public class SolutionPlanEntity extends BaseTimeEntity {
     @Column(name = "price", nullable = true, unique = false)
     private Long price;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "plan_type", nullable = false, unique = false)
-    private PlanType planType;
+    private String planType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "solution_seq", nullable = false)

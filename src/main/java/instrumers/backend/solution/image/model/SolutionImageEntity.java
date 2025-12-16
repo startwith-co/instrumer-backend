@@ -1,7 +1,7 @@
 package instrumers.backend.solution.image.model;
 
 import instrumers.backend.base.BaseTimeEntity;
-import instrumers.backend.solution.image.util.SolutionImageType;
+import instrumers.backend.solution.solution.model.SolutionEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -20,10 +20,13 @@ public class SolutionImageEntity extends BaseTimeEntity {
     @Column(name = "solution_image_seq")
     private Long solutionImageSeq;
 
-    @Column(name = "solution_image_url", nullable = false, unique = false)
+    @Column(name = "image_url", nullable = false, unique = false)
     private String imageUrl;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "solution_image_type", nullable = false, unique = false)
-    private SolutionImageType solutionImageType;
+    @Column(name = "image_type", nullable = false, unique = false)
+    private String imageType;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "solution_seq", nullable = false)
+    private SolutionEntity solution;
 }

@@ -10,4 +10,5 @@ public interface UserRepository {
     UserEntity save(UserEntity userEntity);
     Optional<UserEntity> findByEmail(String email);
     Optional<UserEntity> findByUserSeq(Long userSeq);
+    Optional<UserEntity> findByUserSeqLock(Long userSeq);
 }

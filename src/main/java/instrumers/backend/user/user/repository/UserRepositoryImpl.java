@@ -25,4 +25,9 @@ public class UserRepositoryImpl implements UserRepository {
     public Optional<UserEntity> findByUserSeq(Long userSeq) {
         return userJpaRepository.findById(userSeq);
     }
+
+    @Override
+    public Optional<UserEntity> findByUserSeqLock(Long userSeq) {
+        return userJpaRepository.findByUserSeqLock(userSeq);
+    }
 }
