@@ -39,8 +39,14 @@ public class VendorEntity extends BaseTimeEntity {
     @Column(name = "phone", nullable = false, unique = false)
     private String phone;
 
-    @Column(name = "business_image", nullable = false, unique = false)
-    private String businessImage;
+    @Column(name = "business_image_url", nullable = false, unique = false)
+    private String businessImageUrl;
+
+    @Column(name = "bank", nullable = true, unique = false)
+    private String bank;
+
+    @Column(name = "account", nullable = true, unique = false)
+    private String account;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_seq", nullable = false)
@@ -50,4 +56,11 @@ public class VendorEntity extends BaseTimeEntity {
     @Builder.Default
     @Column(name = "version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
     private Integer version = 0;
+
+    public void update(String businessName, String phone, String bank, String account) {
+        if (businessName != null) this.businessName = businessName;
+        if (phone != null) this.phone = phone;
+        if (bank != null) this.bank = bank;
+        if (account != null) this.account = account;
+    }
 }

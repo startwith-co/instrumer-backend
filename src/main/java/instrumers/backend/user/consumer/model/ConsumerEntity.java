@@ -47,4 +47,9 @@ public class ConsumerEntity extends BaseTimeEntity {
     @Builder.Default
     @Column(name = "version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
     private Integer version = 0;
+
+    public void update(String businessName, String phone) {
+        if (businessName != null) this.businessName = businessName;
+        if (phone != null) this.phone = phone;
+    }
 }

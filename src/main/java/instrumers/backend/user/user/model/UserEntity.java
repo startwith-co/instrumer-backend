@@ -36,6 +36,9 @@ public class UserEntity extends BaseTimeEntity {
     @Column(name = "user_type", nullable = false, unique = false)
     private UserType userType;
 
+    @Column(name = "profile_image_url", nullable = true, unique = false)
+    private String profileImageUrl;
+
     @Builder.Default
     @Column(name = "deleted", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean deleted = false;
@@ -44,4 +47,10 @@ public class UserEntity extends BaseTimeEntity {
     @Builder.Default
     @Column(name = "version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
     private Integer version = 0;
+
+    public void update(String email, String encodedPassword, String profileImageUrl) {
+        if (email != null) this.email = email;
+        if (encodedPassword != null) this.password = encodedPassword;
+        if (profileImageUrl != null) this.profileImageUrl = profileImageUrl;
+    }
 }
