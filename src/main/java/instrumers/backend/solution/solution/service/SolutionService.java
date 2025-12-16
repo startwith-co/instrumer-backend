@@ -180,4 +180,20 @@ public class SolutionService {
                         .toList()
         );
     }
+
+    @Transactional
+    public void delete(Long userSeq, Long solutionSeq) {
+        userRepository.findByUserSeq(userSeq)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 회원입니다."
+                ));
+        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 솔루션입니다."
+                ));
+
+        solutionRepository.delete(solutionEntity);
+    }
 }
