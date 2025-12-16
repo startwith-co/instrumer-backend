@@ -52,6 +52,7 @@ public class SolutionService {
                 .name(request.name())
                 .explanation(request.explanation())
                 .category(request.category())
+                .price(request.price())
                 .userEntity(userEntity)
                 .build());
 
@@ -91,6 +92,56 @@ public class SolutionService {
         return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
     }
 
+    @Transactional
+    public CreateSolutionResponse update(Long userSeq, UpdateSolutionRequest request) {
+        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(request.solutionSeq())
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 솔루션입니다."
+                ));
+
+        if (!solutionEntity.getUserEntity().getUserSeq().equals(userSeq)) {
+            throw new BadRequestException(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "본인의 솔루션만 수정할 수 있습니다."
+            );
+        }
+
+        solutionRepository.delete(solutionEntity);
+
+        CreateSolutionRequest createRequest = new CreateSolutionRequest(
+                request.name(),
+                request.explanation(),
+                request.category(),
+                request.price(),
+                request.images() != null ? request.images().stream()
+                        .map(image -> new CreateSolutionRequest.CreateSolutionImageRequest(
+                                image.imageUrl(),
+                                image.imageType()
+                        ))
+                        .toList() : null,
+                request.plans() != null ? request.plans().stream()
+                        .map(plan -> new CreateSolutionRequest.CreateSolutionPlanRequest(
+                                plan.name(),
+                                plan.subName(),
+                                plan.price(),
+                                plan.planType(),
+                                plan.details() != null ? plan.details().stream()
+                                        .map(detail -> new CreateSolutionRequest.CreateSolutionPlanDetailRequest(
+                                                detail.name(),
+                                                detail.context()
+                                        ))
+                                        .toList() : null
+                        ))
+                        .toList() : null,
+                request.keywords()
+        );
+
+        create(userSeq, createRequest);
+
+        return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
+    }
+
     @Transactional(readOnly = true)
     public GetSolutionResponse get(Long userSeq, Long solutionSeq) {
         userRepository.findByUserSeq(userSeq)
@@ -109,6 +160,7 @@ public class SolutionService {
                 solutionEntity.getName(),
                 solutionEntity.getExplanation(),
                 solutionEntity.getCategory(),
+                solutionEntity.getPrice(),
                 solutionImageRepository.findAllBySolutionEntity(solutionEntity).stream()
                         .map(image -> new CreateSolutionImageRequest(image.getImageUrl(), image.getImageType()))
                         .toList(),

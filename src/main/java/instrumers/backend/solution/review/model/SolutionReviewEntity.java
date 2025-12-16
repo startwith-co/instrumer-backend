@@ -32,7 +32,6 @@ public class SolutionReviewEntity extends BaseTimeEntity {
     @Column(name = "rate", nullable = false, unique = false)
     private Double rate;
 
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "solution_seq", nullable = false)
     private SolutionEntity solutionEntity;

@@ -12,6 +12,7 @@ public class SolutionResponse {
             String name,
             String explanation,
             String category,
+            Long price,
             List<CreateSolutionImageRequest> images,
             List<CreateSolutionPlanRequest> plans,
             List<String> keywords

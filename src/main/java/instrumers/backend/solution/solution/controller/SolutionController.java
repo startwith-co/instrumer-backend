@@ -30,6 +30,15 @@ public class SolutionController {
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 
+    @PutMapping()
+    @Operation(summary = "솔루션 정보 수정")
+    public ResponseEntity<BaseResponse<CreateSolutionResponse>> update(HttpServletRequest httpServletRequest, @Valid @RequestBody UpdateSolutionRequest request) {
+        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+        CreateSolutionResponse response = solutionService.update(userSeq, request);
+
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+    }
+
     @GetMapping()
     @Operation(summary = "솔루션 개별 조회")
     public ResponseEntity<BaseResponse<GetSolutionResponse>> get(HttpServletRequest httpServletRequest, @RequestParam(value = "solutionSeq") Long solutionSeq) {

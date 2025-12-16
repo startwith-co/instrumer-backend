@@ -19,4 +19,9 @@ public class SolutionRepositoryImpl implements SolutionRepository {
     public Optional<SolutionEntity> findBySolutionSeq(Long solutionSeq) {
         return solutionJpaRepository.findBySolutionSeq(solutionSeq);
     }
+
+    @Override
+    public void delete(SolutionEntity solutionEntity) {
+        solutionJpaRepository.delete(solutionEntity);
+    }
 }

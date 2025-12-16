@@ -8,5 +8,8 @@ import java.util.Optional;
 @Component
 public interface SolutionRepository {
     SolutionEntity save(SolutionEntity solutionEntity);
+
     Optional<SolutionEntity> findBySolutionSeq(Long solutionSeq);
+
+    void delete(SolutionEntity solutionEntity);
 }

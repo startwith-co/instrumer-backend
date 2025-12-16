@@ -35,6 +35,9 @@ public class SolutionEntity extends BaseTimeEntity {
     @Column(name = "category", nullable = false, unique = false)
     private String category;
 
+    @Column(name = "price", nullable = false, unique = false)
+    private Long price;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_seq", nullable = false)
     private UserEntity userEntity;
