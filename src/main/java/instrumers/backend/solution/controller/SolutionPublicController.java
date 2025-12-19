@@ -1,8 +1,8 @@
 package instrumers.backend.solution.controller;
 
 import instrumers.backend.base.BaseResponse;
-import instrumers.backend.solution.solution.service.SolutionService;
-import instrumers.backend.solution.review.service.SolutionReviewService;
+import instrumers.backend.solution.service.SolutionService;
+import instrumers.backend.solution.service.SolutionReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static instrumers.backend.solution.solution.controller.response.SolutionResponse.*;
-import static instrumers.backend.solution.review.controller.response.SolutionReviewResponse.*;
+import static instrumers.backend.solution.controller.dto.response.SolutionResponse.*;
+import static instrumers.backend.solution.controller.dto.response.SolutionReviewResponse.*;
 
 @RestController
 @RequiredArgsConstructor

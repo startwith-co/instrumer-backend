@@ -1,7 +1,7 @@
 package instrumers.backend.solution.controller;
 
 import instrumers.backend.base.BaseResponse;
-import instrumers.backend.solution.review.service.SolutionReviewService;
+import instrumers.backend.solution.service.SolutionReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,8 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static instrumers.backend.solution.review.controller.request.SolutionReviewRequest.*;
-import static instrumers.backend.solution.review.controller.response.SolutionReviewResponse.*;
+import static instrumers.backend.solution.controller.dto.request.SolutionReviewRequest.*;
+import static instrumers.backend.solution.controller.dto.response.SolutionReviewResponse.*;
 
 @RestController
 @RequiredArgsConstructor
