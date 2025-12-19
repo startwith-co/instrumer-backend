@@ -144,12 +144,6 @@ public class SolutionService {
 
     @Transactional(readOnly = true)
     public GetSolutionResponse get(Long userSeq, Long solutionSeq) {
-        userRepository.findByUserSeq(userSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 회원입니다."
-                ));
-
         SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
                 .orElseThrow(() -> new NotFoundException(
                         HttpStatus.NOT_FOUND.value(),
