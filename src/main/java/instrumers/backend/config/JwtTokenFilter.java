@@ -9,24 +9,23 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class JwtTokenFilter extends OncePerRequestFilter {
 
     private final CommonService commonService;
-    private final List<RequestMatcher> permitAllRequestMatchers;
 
-    public JwtTokenFilter(CommonService commonService, List<String> permitAllEndpoints) {
+    public JwtTokenFilter(CommonService commonService) {
         this.commonService = commonService;
-        this.permitAllRequestMatchers = permitAllEndpoints.stream()
-                .map(AntPathRequestMatcher::new)
-                .collect(Collectors.toList());
     }
 
     @Override
@@ -39,15 +38,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        boolean isPermitAllEndpoint = permitAllRequestMatchers.stream().anyMatch(matcher -> matcher.matches(request));
-        if (isPermitAllEndpoint) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            writeUnauthorized(response, HttpServletResponse.SC_UNAUTHORIZED, "Authorization header missing");
+            filterChain.doFilter(request, response);
             return;
         }
 
@@ -56,6 +49,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             Claims claims = commonService.parseToken(token);
             String type = claims.get("type", String.class);
             Long userSeq = ((Number) claims.get("userSeq")).longValue();
+            String userType = claims.get("userType", String.class);
 
             if (!"ACCESS".equalsIgnoreCase(type)) {
                 writeUnauthorized(response, HttpServletResponse.SC_UNAUTHORIZED, "ACCESS 토큰만 사용할 수 있습니다.");
@@ -72,9 +66,27 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 return;
             }
 
+            // userType null 체크 (ACCESS 토큰에는 userType이 필수)
+            if (userType == null || userType.trim().isEmpty()) {
+                writeUnauthorized(response, HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 사용자 타입입니다.");
+                return;
+            }
+
+            // Request attribute 설정
             request.setAttribute("accessToken", token);
             request.setAttribute("type", type);
             request.setAttribute("userSeq", userSeq);
+            request.setAttribute("userType", userType);
+
+            // Spring Security Authentication 설정
+            List<GrantedAuthority> authorities = Arrays.asList(
+                new SimpleGrantedAuthority("ROLE_" + userType)
+            );
+            Authentication auth = new UsernamePasswordAuthenticationToken(
+                userSeq, null, authorities
+            );
+            SecurityContextHolder.getContext().setAuthentication(auth);
+
             response.setHeader("Authorization", "Bearer " + token);
 
             filterChain.doFilter(request, response);

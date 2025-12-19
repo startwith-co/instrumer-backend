@@ -36,8 +36,8 @@ public class UserService {
             );
         }
 
-        String accessToken = commonService.issueToken(userEntity.getUserSeq(), "ACCESS");
-        String refreshToken = commonService.issueToken(userEntity.getUserSeq(), "REFRESH");
+        String accessToken = commonService.issueToken(userEntity.getUserSeq(), "ACCESS", userEntity.getUserType());
+        String refreshToken = commonService.issueToken(userEntity.getUserSeq(), "REFRESH", userEntity.getUserType());
         commonService.saveToken(userEntity.getUserSeq(), "WHITE", accessToken);
 
         return new LoginUserResponse(accessToken, refreshToken);
@@ -55,7 +55,7 @@ public class UserService {
             );
         }
 
-        userRepository.findByUserSeq(userSeq)
+        UserEntity userEntity = userRepository.findByUserSeq(userSeq)
                 .orElseThrow(() -> new NotFoundException(
                         HttpStatus.NOT_FOUND.value(),
                         "존재하지 않는 회원입니다."
@@ -78,8 +78,8 @@ public class UserService {
         commonService.deleteToken(userSeq, "WHITE");
         commonService.saveToken(userSeq, "BLACK", request.refreshToken());
 
-        String accessToken = commonService.issueToken(userSeq, "ACCESS");
-        String refreshToken = commonService.issueToken(userSeq, "REFRESH");
+        String accessToken = commonService.issueToken(userSeq, "ACCESS", userEntity.getUserType());
+        String refreshToken = commonService.issueToken(userSeq, "REFRESH", userEntity.getUserType());
 
         commonService.saveToken(userSeq, "WHITE", accessToken);
 
