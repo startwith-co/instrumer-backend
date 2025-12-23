@@ -26,6 +26,7 @@ public class ExceptionLogService {
     public void saveExceptionLogEntity(int status, String message, String uri, String methodName, String logDetail) {
         ExceptionLogEntity exceptionLogEntity = ExceptionLogEntity.builder()
                 .httpStatus(status)
+                .errorCode("ERR_" + status)
                 .message(message)
                 .requestUri(uri)
                 .methodName(methodName)

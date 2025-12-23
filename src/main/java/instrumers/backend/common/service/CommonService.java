@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.GeneratePresignedUrlRequest;
 import instrumers.backend.exception.BadRequestException;
 import instrumers.backend.exception.ServerException;
+import instrumers.backend.user.user.util.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -49,11 +50,12 @@ public class CommonService {
     /**
      * 지정된 만료 시간과 사용자 정보를 기반으로 JWT 토큰을 발급합니다.
      *
-     * @param userSeq 사용자 고유 식별자(PK)
-     * @param type    토큰 유형 (예: "ACCESS", "REFRESH")
+     * @param userSeq  사용자 고유 식별자(PK)
+     * @param type     토큰 유형 (예: "ACCESS", "REFRESH")
+     * @param userType 사용자 타입 (예: "VENDOR", "CONSUMER")
      * @return 서명된 JWT 토큰 문자열
      */
-    public String issueToken(Long userSeq, String type) {
+    public String issueToken(Long userSeq, String type, UserType userType) {
         long now = System.currentTimeMillis();
         Date exp = null;
         if (type.equalsIgnoreCase("ACCESS")) exp = new Date(now + accessTokenExpiration);
@@ -62,6 +64,7 @@ public class CommonService {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userSeq", userSeq);
         claims.put("type", type.toUpperCase());
+        claims.put("userType", userType.toString());
 
         return Jwts.builder()
                 .setClaims(claims)
