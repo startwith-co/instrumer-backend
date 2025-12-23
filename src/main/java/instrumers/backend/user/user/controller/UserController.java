@@ -32,7 +32,7 @@ public class UserController {
     private final ConsumerService consumerService;
     private final VendorService vendorService;
 
-    @PostMapping(value = "/auth/login")
+    @PostMapping(value = "/login")
     @Operation(summary = "회원 로그인")
     public ResponseEntity<BaseResponse<LoginUserResponse>> register(@Valid @RequestBody LoginUserRequest request) {
         LoginUserResponse response = userService.Login(request);
@@ -40,7 +40,7 @@ public class UserController {
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 
-    @PostMapping(value = "/auth/reissue-token")
+    @PostMapping(value = "/reissue-token")
     @Operation(summary = "토큰 재발급")
     public ResponseEntity<BaseResponse<ReIssueTokenResponse>> reissueToken(@Valid @RequestBody ReissueTokenRequest request) {
         ReIssueTokenResponse response = userService.reissueToken(request);
@@ -48,7 +48,7 @@ public class UserController {
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 
-    @PostMapping(value = "/auth/send-email")
+    @PostMapping(value = "/send-email")
     @Operation(summary = "이메일 전송 (유효시간 5분)")
     public ResponseEntity<BaseResponse<Map<String, String>>> sendEmail(@Valid @RequestBody SendEmailRequest request) {
         String authCode = commonService.sendAuthCode(request.email());
@@ -58,7 +58,7 @@ public class UserController {
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 
-    @PostMapping(value = "/auth/auth-code")
+    @PostMapping(value = "/auth-code")
     @Operation(summary = "이메일 인증 번호 확인")
     public ResponseEntity<BaseResponse<String>> verifyAuthKey(@Valid @RequestBody VerifyEmailAuthKeyRequest request) {
         if (!commonService.verifyAuthCode(request.email(), request.authCode())) {
@@ -71,14 +71,14 @@ public class UserController {
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
     }
 
-    @PostMapping(value = "/auth/register/consumer")
+    @PostMapping(value = "/register/consumer")
     @Operation(summary = "수요 고객 회원가입")
     public ResponseEntity<BaseResponse<String>> registerConsumer(@Valid @RequestBody RegisterConsumerRequest request) {
         consumerService.save(request);
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
     }
 
-    @PostMapping(value = "/auth/register/vendor")
+    @PostMapping(value = "/register/vendor")
     @Operation(summary = "벤더 기업 회원가입")
     public ResponseEntity<BaseResponse<String>> registerVendor(@Valid @RequestBody RegisterVendorRequest request) {
         vendorService.save(request);
