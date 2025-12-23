@@ -79,12 +79,8 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             request.setAttribute("userType", userType);
 
             // Spring Security Authentication 설정
-            List<GrantedAuthority> authorities = Arrays.asList(
-                new SimpleGrantedAuthority("ROLE_" + userType)
-            );
-            Authentication auth = new UsernamePasswordAuthenticationToken(
-                userSeq, null, authorities
-            );
+            List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + userType));
+            Authentication auth = new UsernamePasswordAuthenticationToken(userSeq, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             response.setHeader("Authorization", "Bearer " + token);

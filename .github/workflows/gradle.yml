@@ -22,20 +22,19 @@ jobs:
 
       # DEVELOP 용 YML
       - name: Set YML for DEVELOP
-        if: github.base_ref == 'develop' || github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/develop'
         run: |
           mkdir -p src/main/resources
           echo "${{ secrets.APPLICATION_YML_TEST }}" | base64 --decode > src/main/resources/application.yml
           echo "${{ secrets.APPLICATION_TEST_YML }}" | base64 --decode > src/main/resources/application-test.yml
 
-#      # PRODUCTION 용 YML
-#      - name: Set YML for PRODUCTION
-#        if: github.base_ref == 'master' || github.ref == 'refs/heads/master'
-#        run: |
-#          mkdir -p src/main/resources
-#          echo "${{ secrets.APPLICATION_YML_PRODUCTION }}" | base64 --decode > src/main/resources/application.yml
-#          echo "${{ secrets.APPLICATION_PRODUCTION_YML }}" | base64 --decode > src/main/resources/application-production.yml
-
+      # PRODUCTION 용 YML
+      - name: Set YML for PRODUCTION
+        if: github.ref == 'refs/heads/master'
+        run: |
+          mkdir -p src/main/resources
+          echo "${{ secrets.APPLICATION_YML_PRODUCTION }}" | base64 --decode > src/main/resources/application.yml
+          echo "${{ secrets.APPLICATION_PRODUCTION_YML }}" | base64 --decode > src/main/resources/application-production.yml
 
       # Gradle Build
       - name: Grant execute permission for Gradle
@@ -44,15 +43,16 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
-      # Docker Config
+      # DockerHub Login (빌드 러너)
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
+      # DEVELOP 이미지 빌드/푸시
       - name: Build and Push Docker Image (DEVELOP)
-        if: github.base_ref == 'develop' || github.ref == 'refs/heads/develop'
+        if: github.ref == 'refs/heads/develop'
         env:
           NAME: ${{ secrets.DOCKER_USERNAME }}
           REPO: instrumer-develop
@@ -61,63 +61,73 @@ jobs:
           docker tag $REPO:latest $NAME/$REPO:latest
           docker push $NAME/$REPO:latest
 
-#      - name: Build and Push Docker Image (PRODUCTION)
-#        if: github.base_ref == 'master' || github.ref == 'refs/heads/master'
-#        env:
-#          NAME: ${{ secrets.DOCKER_USERNAME }}
-#          REPO: startwith-prod   # 운영 서버용 별도 리포지토리
-#        run: |
-#          docker build -t $REPO .
-#          docker tag $REPO:latest $NAME/$REPO:latest
-#          docker push $NAME/$REPO:latest
+      # PROD 이미지 빌드/푸시
+      - name: Build and Push Docker Image (PRODUCTION)
+        if: github.ref == 'refs/heads/master'
+        env:
+          NAME: ${{ secrets.DOCKER_USERNAME }}
+          REPO: instrumer-prod
+        run: |
+          docker build -t $REPO .
+          docker tag $REPO:latest $NAME/$REPO:latest
+          docker push $NAME/$REPO:latest
 
-  deploy:
+  # 테스트 서버 배포 (self-hosted runner: label = test)
+  deploy-test:
     needs: build
-    runs-on: self-hosted
-    name: Deploy to EC2 (Self-hosted Runner)
+    runs-on: [self-hosted, test]
+    if: github.ref == 'refs/heads/develop'
+    name: Deploy to Test Server (Self-hosted Runner)
 
     steps:
-      - name: Set Docker permissions
+      - name: Docker login (on TEST EC2)
         run: |
-          sudo usermod -aG docker $USER
-          sudo chown $USER /var/run/docker.sock
-          newgrp docker
+          echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Clean up Docker to free space
         run: |
-          sudo docker container prune -f
-          sudo docker image prune -a -f
-          sudo docker volume prune -f
-          sudo docker network prune -f
-          sudo rm -rf /var/lib/apt/lists/*
-          sudo apt-get clean
-          sudo apt-get autoremove
+          sudo docker container prune -f || true
+          sudo docker image prune -a -f || true
+          sudo docker volume prune -f || true
+          sudo docker network prune -f || true
 
-      # 배포할 서버 선택 (develop → 테스트 서버, master → 운영 서버)
-      - name: Deploy to DEVELOP EC2
-        if: github.base_ref == 'develop' || github.ref == 'refs/heads/develop'
+      - name: Deploy to Test Server
         run: |
-          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@${{ secrets.TEST_EC2_IP }} << 'EOF'
-            sudo docker container prune -f
-            sudo docker image prune -a -f
-            sudo docker volume prune -f
-            sudo docker network prune -f
+          # 기존 컨테이너 종료 및 삭제
+          sudo docker ps -q --filter "name=instrumer-develop" | grep -q . && \
+            sudo docker stop instrumer-develop && sudo docker rm instrumer-develop || true
 
-            sudo docker ps -q --filter "name=instrumer-develop" | grep -q . && sudo docker stop "instrumer-develop" && sudo docker rm "instrumer-develop"
-            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
-            sudo docker run -d --name instrumer-develop --rm -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
-          EOF
+          # 최신 이미지 pull 및 실행
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
+          sudo docker run -d --name instrumer-develop --rm -p 8080:8080 \
+            ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
 
-#      - name: Deploy to PROD EC2
-#        if: github.base_ref == 'master' || github.ref == 'refs/heads/master'
-#        run: |
-#          ssh -o StrictHostKeyChecking=no -i ec2_key.pem ubuntu@${{ secrets.PROD_EC2_IP }} << 'EOF'
-#            sudo docker container prune -f
-#            sudo docker image prune -a -f
-#            sudo docker volume prune -f
-#            sudo docker network prune -f
-#
-#            sudo docker ps -q --filter "name=startwith-prod" | grep -q . && sudo docker stop "startwith-prod" && sudo docker rm "startwith-prod"
-#            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/startwith-prod:latest
-#            sudo docker run -d --name startwith-prod --rm -p 8080:8080 ${{ secrets.DOCKER_USERNAME }}/startwith-prod:latest
-#          EOF
+  # 운영 서버 배포 (self-hosted runner: label = prod) – 나중에 러너 붙이면 사용
+  deploy-prod:
+    needs: build
+    runs-on: [self-hosted, prod]
+    if: github.ref == 'refs/heads/master'
+    name: Deploy to Production Server (Self-hosted Runner)
+
+    steps:
+      - name: Docker login (on PROD EC2)
+        run: |
+          echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Clean up Docker to free space
+        run: |
+          sudo docker container prune -f || true
+          sudo docker image prune -a -f || true
+          sudo docker volume prune -f || true
+          sudo docker network prune -f || true
+
+      - name: Deploy to Production Server
+        run: |
+          # 기존 컨테이너 종료 및 삭제
+          sudo docker ps -q --filter "name=instrumer-prod" | grep -q . && \
+            sudo docker stop instrumer-prod && sudo docker rm instrumer-prod || true
+
+          # 최신 이미지 pull 및 실행
+          sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-prod:latest
+          sudo docker run -d --name instrumer-prod --rm -p 8080:8080 \
+            ${{ secrets.DOCKER_USERNAME }}/instrumer-prod:latest
