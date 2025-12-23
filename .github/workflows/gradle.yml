@@ -97,9 +97,9 @@ jobs:
           sudo docker ps -q --filter "name=instrumer-develop" | grep -q . && \
             sudo docker stop instrumer-develop && sudo docker rm instrumer-develop || true
 
-          # 최신 이미지 pull 및 실행
+          # 최신 이미지 pull 및 실행 (--network host로 호스트 네트워크 사용)
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
-          sudo docker run -d --name instrumer-develop --rm -p 8080:8080 \
+          sudo docker run -d --name instrumer-develop --rm --network host \
             ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
 
   # 운영 서버 배포 (self-hosted runner: label = prod) – 나중에 러너 붙이면 사용
@@ -127,7 +127,7 @@ jobs:
           sudo docker ps -q --filter "name=instrumer-prod" | grep -q . && \
             sudo docker stop instrumer-prod && sudo docker rm instrumer-prod || true
 
-          # 최신 이미지 pull 및 실행
+          # 최신 이미지 pull 및 실행 (--network host로 호스트 네트워크 사용)
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-prod:latest
-          sudo docker run -d --name instrumer-prod --rm -p 8080:8080 \
+          sudo docker run -d --name instrumer-prod --rm --network host \
             ${{ secrets.DOCKER_USERNAME }}/instrumer-prod:latest
