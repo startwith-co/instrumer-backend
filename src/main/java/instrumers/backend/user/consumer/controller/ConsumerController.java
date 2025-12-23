@@ -15,18 +15,10 @@ import static instrumers.backend.user.consumer.controller.request.ConsumerReques
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/consumer-service")
+@RequestMapping("/api/consumer")
 @Tag(name = "수요 기업")
 public class ConsumerController {
     private final ConsumerService consumerService;
-
-    @PostMapping(value = "/auth/register")
-    @Operation(summary = "수요 고객 회원가입")
-    public ResponseEntity<BaseResponse<String>> register(@Valid @RequestBody RegisterConsumerRequest request) {
-        consumerService.save(request);
-
-        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
-    }
 
     @PutMapping()
     @Operation(summary = "수요 고객 정보 수정")

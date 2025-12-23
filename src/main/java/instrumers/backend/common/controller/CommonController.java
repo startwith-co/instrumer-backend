@@ -21,12 +21,12 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/common-service")
+@RequestMapping("/api/public")
 @Tag(name = "공통 API")
 public class CommonController {
 	private final CommonService commonService;
 
-	@PostMapping("/auth/presigned-url")
+	@PostMapping("/presigned-url")
 	@Operation(summary = "업로드용 S3 Presigned URL 생성")
 	public ResponseEntity<BaseResponse<PresignedURLResponse>> presignedURL(@Valid @RequestBody PresignedURLRequest request) {
 		String presignedUrl = commonService.generatePresignedUrl(request.fileName(), HttpMethod.PUT, request.expiration());

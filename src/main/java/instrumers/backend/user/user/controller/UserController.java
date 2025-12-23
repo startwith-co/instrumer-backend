@@ -3,7 +3,9 @@ package instrumers.backend.user.user.controller;
 import instrumers.backend.base.BaseResponse;
 import instrumers.backend.common.service.CommonService;
 import instrumers.backend.exception.BadRequestException;
+import instrumers.backend.user.consumer.service.ConsumerService;
 import instrumers.backend.user.user.service.UserService;
+import instrumers.backend.user.vendor.service.VendorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -17,14 +19,18 @@ import java.util.Map;
 
 import static instrumers.backend.user.user.controller.request.UserRequest.*;
 import static instrumers.backend.user.user.controller.response.UserResponse.*;
+import static instrumers.backend.user.consumer.controller.request.ConsumerRequest.*;
+import static instrumers.backend.user.vendor.controller.request.VendorRequest.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/user-service")
+@RequestMapping("/api/public")
 @Tag(name = "회원")
 public class UserController {
     private final UserService userService;
     private final CommonService commonService;
+    private final ConsumerService consumerService;
+    private final VendorService vendorService;
 
     @PostMapping(value = "/auth/login")
     @Operation(summary = "회원 로그인")
@@ -62,6 +68,20 @@ public class UserController {
             );
         }
 
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
+    }
+
+    @PostMapping(value = "/auth/register/consumer")
+    @Operation(summary = "수요 고객 회원가입")
+    public ResponseEntity<BaseResponse<String>> registerConsumer(@Valid @RequestBody RegisterConsumerRequest request) {
+        consumerService.save(request);
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
+    }
+
+    @PostMapping(value = "/auth/register/vendor")
+    @Operation(summary = "벤더 기업 회원가입")
+    public ResponseEntity<BaseResponse<String>> registerVendor(@Valid @RequestBody RegisterVendorRequest request) {
+        vendorService.save(request);
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
     }
 }

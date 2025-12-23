@@ -31,12 +31,10 @@ public class SolutionPublicController {
      */
     @GetMapping("/{solutionSeq}")
     @Operation(summary = "솔루션 상세 조회")
-    public ResponseEntity<BaseResponse<GetSolutionResponse>> getSolution(
-            @PathVariable Long solutionSeq) {
-
+    public ResponseEntity<BaseResponse<GetSolutionResponse>> getSolution(@PathVariable Long solutionSeq) {
         GetSolutionResponse response = solutionService.get(null, solutionSeq);
-        return ResponseEntity.ok()
-                .body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 
     /**
@@ -46,11 +44,9 @@ public class SolutionPublicController {
      */
     @GetMapping("/{solutionSeq}/reviews")
     @Operation(summary = "솔루션 리뷰 목록 조회")
-    public ResponseEntity<BaseResponse<List<GetSolutionReviewResponse>>> getReviews(
-            @PathVariable Long solutionSeq) {
-
+    public ResponseEntity<BaseResponse<List<GetSolutionReviewResponse>>> getReviews(@PathVariable Long solutionSeq) {
         List<GetSolutionReviewResponse> response = reviewService.get(null, solutionSeq);
-        return ResponseEntity.ok()
-                .body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 }

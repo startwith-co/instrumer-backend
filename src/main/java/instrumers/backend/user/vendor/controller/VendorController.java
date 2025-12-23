@@ -15,18 +15,10 @@ import static instrumers.backend.user.vendor.controller.request.VendorRequest.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/vendor-service")
+@RequestMapping("/api/vendor")
 @Tag(name = "벤더 기업")
 public class VendorController {
     private final VendorService vendorService;
-
-    @PostMapping(value = "/auth/register")
-    @Operation(summary = "벤더 기업 회원가입")
-    public ResponseEntity<BaseResponse<String>> register(@Valid @RequestBody RegisterVendorRequest request) {
-        vendorService.save(request);
-
-        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
-    }
 
     @PutMapping
     @Operation(summary = "벤더 기업 회원 정보 수정")
