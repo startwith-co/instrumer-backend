@@ -33,7 +33,7 @@ services:
       - "name=redis"
       - "mode=standalone"
     restart: always
-    command: redis-server --requirepass ${REDIS_PASSWORD}
+    command: [ "redis-server", "/usr/local/conf/redis.conf" ]
     networks:
       - docker-bridge
 
@@ -44,7 +44,6 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - SPRING_PROFILES_ACTIVE=test
       - TZ=Asia/Seoul
     depends_on:
       - mysql
