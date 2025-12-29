@@ -163,7 +163,6 @@ public class SolutionService {
         // 모든 관련 데이터를 한 번에 조회 (N+1 문제 방지)
         var images = solutionImageRepository.findAllBySolutionEntity(solutionEntity);
         var plans = solutionPlanRepository.findAllBySolutionEntity(solutionEntity);
-        var keywords = solutionKeywordRepository.findAllBySolutionEntity(solutionEntity);
         var planDetailsMap = solutionPlanDetailRepository.findAllBySolutionPlanEntityIn(plans)
                 .stream()
                 .collect(Collectors.groupingBy(detail -> detail.getSolutionPlanEntity().getSolutionPlanSeq(), Collectors.toList()));
@@ -199,9 +198,6 @@ public class SolutionService {
                                         .map(detail -> new GetSolutionPlanDetailRequest(detail.getName(), detail.getContext()))
                                         .toList()
                         ))
-                        .toList(),
-                keywords.stream()
-                        .map(SolutionKeywordEntity::getKeyword)
                         .toList(),
                 reviewCount,
                 average,

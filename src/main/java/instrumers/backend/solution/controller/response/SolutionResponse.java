@@ -18,7 +18,6 @@ public class SolutionResponse {
             Long price,
             List<GetSolutionImageRequest> images,
             List<GetSolutionPlanRequest> plans,
-            List<String> keywords,
             Long reviewCnt,
             Double reviewAverage,
             Long vendorSeq,
