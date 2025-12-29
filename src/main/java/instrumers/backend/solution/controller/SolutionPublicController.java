@@ -7,11 +7,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 import static instrumers.backend.solution.controller.dto.response.SolutionResponse.*;
 import static instrumers.backend.solution.controller.dto.response.SolutionReviewResponse.*;
@@ -39,14 +40,18 @@ public class SolutionPublicController {
 	}
 
 	/**
-	 * 솔루션 리뷰 목록 조회
-	 * - 특정 솔루션의 모든 리뷰 확인
+	 * 솔루션 리뷰 목록 조회 (페이징)
+	 * - 특정 솔루션의 리뷰를 페이징하여 조회
 	 * - 인증 불필요
+	 * - 기본값: page=0, size=10, sort=createdAt,DESC
 	 */
 	@GetMapping("/{solutionSeq}/reviews")
-	@Operation(summary = "솔루션 리뷰 목록 조회")
-	public ResponseEntity<BaseResponse<List<GetSolutionReviewResponse>>> getReviews(@PathVariable Long solutionSeq) {
-		List<GetSolutionReviewResponse> response = reviewService.get(solutionSeq);
+	@Operation(summary = "솔루션 리뷰 목록 조회 (페이징)")
+	public ResponseEntity<BaseResponse<GetSolutionReviewPageResponse>> getReviews(
+			@PathVariable Long solutionSeq,
+			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+	) {
+		GetSolutionReviewPageResponse response = reviewService.get(solutionSeq, pageable);
 
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
 	}

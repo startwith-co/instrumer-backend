@@ -15,6 +15,8 @@ import instrumers.backend.user.vendor.model.VendorEntity;
 import instrumers.backend.user.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -65,14 +67,15 @@ public class SolutionReviewService {
 	}
 
 	@Transactional(readOnly = true)
-	public List<GetSolutionReviewResponse> get(Long solutionSeq) {
+	public GetSolutionReviewPageResponse get(Long solutionSeq, Pageable pageable) {
 		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
 			.orElseThrow(() -> new NotFoundException(
 				HttpStatus.NOT_FOUND.value(),
 				"존재하지 않는 솔루션입니다."
 			));
 
-		return solutionReviewRepository.findAllBySolutionEntity(solutionEntity).stream()
+		Page<SolutionReviewEntity> reviewPage = solutionReviewRepository.findAllBySolutionEntity(solutionEntity, pageable);
+		List<GetSolutionReviewResponse> content = reviewPage.getContent().stream()
 			.map(review -> {
 				UserEntity userEntity = review.getUserEntity();
 				String businessName = null;
@@ -93,6 +96,16 @@ public class SolutionReviewService {
 				);
 			})
 			.toList();
+
+		return new GetSolutionReviewPageResponse(
+			content,
+			reviewPage.getNumber(),
+			reviewPage.getSize(),
+			reviewPage.getTotalElements(),
+			reviewPage.getTotalPages(),
+			reviewPage.hasNext(),
+			reviewPage.hasPrevious()
+		);
 	}
 
 	@Transactional(readOnly = true)
@@ -103,16 +116,9 @@ public class SolutionReviewService {
 				"존재하지 않는 솔루션입니다."
 			));
 
-		List<SolutionReviewEntity> reviews =
-			solutionReviewRepository.findAllBySolutionEntity(solutionEntity);
-
-		long count = reviews.size();
-		double average = Math.round(
-			reviews.stream()
-				.mapToDouble(SolutionReviewEntity::getRate)
-				.average()
-				.orElse(0.0) * 10.0
-		) / 10.0;
+		long count = solutionReviewRepository.countBySolutionEntity(solutionEntity);
+		Double averageRate = solutionReviewRepository.getAverageRateBySolutionEntity(solutionEntity);
+		double average = Math.round((averageRate != null ? averageRate : 0.0) * 10.0) / 10.0;
 
 		return new GetSolutionReviewInfoResponse(count, average);
 	}
