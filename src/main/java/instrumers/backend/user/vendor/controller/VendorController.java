@@ -1,6 +1,7 @@
 package instrumers.backend.user.vendor.controller;
 
 import instrumers.backend.base.BaseResponse;
+import instrumers.backend.user.vendor.controller.response.VendorResponse;
 import instrumers.backend.user.vendor.service.VendorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import static instrumers.backend.user.vendor.controller.request.VendorRequest.*;
+import static instrumers.backend.user.vendor.controller.response.VendorResponse.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -27,5 +29,14 @@ public class VendorController {
         vendorService.update(userSeq, request);
 
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
+    }
+
+    @GetMapping
+    @Operation(summary = "벤더 기업 정보 조회")
+    public ResponseEntity<BaseResponse<GetVendorResponse>> get(HttpServletRequest httpServletRequest) {
+        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+        GetVendorResponse response = vendorService.get(userSeq);
+
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 }

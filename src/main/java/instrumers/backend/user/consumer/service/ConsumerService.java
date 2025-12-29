@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static instrumers.backend.user.consumer.controller.request.ConsumerRequest.*;
+import static instrumers.backend.user.consumer.controller.response.ConsumerResponse.*;
 
 @Service
 @RequiredArgsConstructor
@@ -87,5 +88,25 @@ public class ConsumerService {
                     e.getMessage()
             );
         }
+    }
+
+    @Transactional(readOnly = true)
+    public GetConsumerResponse get(Long userSeq) {
+        UserEntity userEntity = userRepository.findById(userSeq)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 회원입니다."
+                ));
+
+        ConsumerEntity consumerEntity = consumerRepository.findByUserEntity(userEntity)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 수요 기업 회원입니다."
+                ));
+
+        return new GetConsumerResponse(
+                userEntity.getUserSeq(), userEntity.getEmail(), userEntity.getUserType(), userEntity.getProfileImageUrl(),
+                consumerEntity.getBusinessName(), consumerEntity.getManagerName(), consumerEntity.getPhone()
+        );
     }
 }

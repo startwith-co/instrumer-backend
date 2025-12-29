@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import static instrumers.backend.user.vendor.controller.request.VendorRequest.*;
+import static instrumers.backend.user.vendor.controller.response.VendorResponse.*;
 
 @Service
 @RequiredArgsConstructor
@@ -89,5 +90,26 @@ public class VendorService {
                     e.getMessage()
             );
         }
+    }
+
+    @Transactional(readOnly = true)
+    public GetVendorResponse get(Long userSeq) {
+        UserEntity userEntity = userRepository.findById(userSeq)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 회원입니다."
+                ));
+
+        VendorEntity vendorEntity = vendorRepository.findByUserEntity(userEntity)
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 기업 회원입니다."
+                ));
+
+        return new GetVendorResponse(
+                userEntity.getUserSeq(), userEntity.getEmail(), userEntity.getUserType(),
+                userEntity.getProfileImageUrl(), vendorEntity.getBusinessName(), vendorEntity.getManagerName(),
+                vendorEntity.getPhone(), vendorEntity.getBank(), vendorEntity.getAccount()
+        );
     }
 }
