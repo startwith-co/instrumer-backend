@@ -43,6 +43,14 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew clean build
 
+      - name: Create .env for docker-compose
+        run: |
+          echo "MYSQL_DATABASE=${{ secrets.MYSQL_DATABASE }}" > .env
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env
+          echo "MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}" >> .env
+          echo "DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}" >> .env
+
       # DockerHub Login (빌드 러너)
       - name: Login to DockerHub
         uses: docker/login-action@v2
@@ -103,15 +111,23 @@ jobs:
           
           # docker-compose로 재시작 (같은 네트워크로 묶임)
           # 프로젝트 디렉토리로 이동 (self-hosted runner의 실제 프로젝트 경로)
-          # Checkout으로 체크아웃된 위치 또는 프로젝트가 있는 경로로 이동
           cd ${{ github.workspace }} || cd /home/ubuntu/instrumer-backend || cd ~/instrumer-backend || pwd
+          
+          # .env 파일 생성 (docker-compose에서 사용할 환경 변수)
+          cat > .env << EOF
+          MYSQL_DATABASE=instrumer
+          MYSQL_USER=instrumer
+          MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+          MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
+          DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
+          EOF
           
           # 기존 spring-boot 컨테이너 중지 및 제거 (DB와 Redis는 영향 없음)
           sudo docker-compose stop spring-boot || true
           sudo docker-compose rm -f spring-boot || true
           
           # 새 이미지로 시작 (--no-deps로 DB와 Redis는 재시작하지 않음)
-          sudo DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }} docker-compose up -d --no-deps spring-boot
+          sudo docker-compose up -d --no-deps spring-boot
 
   # 운영 서버 배포 (self-hosted runner: label = prod) – 나중에 러너 붙이면 사용
   deploy-prod:
