@@ -8,8 +8,14 @@ on:
   workflow_dispatch:
 
 jobs:
+  # ============================================
+  # BUILD: 코드 빌드 및 Docker 이미지 생성
+  # ============================================
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image-name: ${{ steps.set-image-name.outputs.name }}
+      image-repo: ${{ steps.set-image-name.outputs.repo }}
 
     steps:
       - name: Checkout Repository
@@ -20,7 +26,17 @@ jobs:
         with:
           java-version: '17'
 
-      # DEVELOP 용 YML
+      - name: Set Image Name
+        id: set-image-name
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            echo "name=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "repo=instrumer-develop" >> $GITHUB_OUTPUT
+          else
+            echo "name=${{ secrets.DOCKER_USERNAME }}" >> $GITHUB_OUTPUT
+            echo "repo=instrumer-prod" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set YML for DEVELOP
         if: github.ref == 'refs/heads/develop'
         run: |
@@ -28,7 +44,6 @@ jobs:
           echo "${{ secrets.APPLICATION_YML_TEST }}" | base64 --decode > src/main/resources/application.yml
           echo "${{ secrets.APPLICATION_TEST_YML }}" | base64 --decode > src/main/resources/application-test.yml
 
-      # PRODUCTION 용 YML
       - name: Set YML for PRODUCTION
         if: github.ref == 'refs/heads/master'
         run: |
@@ -36,80 +51,68 @@ jobs:
           echo "${{ secrets.APPLICATION_YML_PRODUCTION }}" | base64 --decode > src/main/resources/application.yml
           echo "${{ secrets.APPLICATION_PRODUCTION_YML }}" | base64 --decode > src/main/resources/application-production.yml
 
-      # Gradle Build
       - name: Grant execute permission for Gradle
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
         run: ./gradlew clean build
 
-      # DockerHub Login (빌드 러너)
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
-      # DEVELOP 이미지 빌드/푸시
-      - name: Build and Push Docker Image (DEVELOP)
-        if: github.ref == 'refs/heads/develop'
+      - name: Build and Push Docker Image
         env:
-          NAME: ${{ secrets.DOCKER_USERNAME }}
-          REPO: instrumer-develop
+          NAME: ${{ steps.set-image-name.outputs.name }}
+          REPO: ${{ steps.set-image-name.outputs.repo }}
         run: |
           docker build -t $REPO .
           docker tag $REPO:latest $NAME/$REPO:latest
           docker push $NAME/$REPO:latest
 
-      # PROD 이미지 빌드/푸시
-      - name: Build and Push Docker Image (PRODUCTION)
-        if: github.ref == 'refs/heads/master'
-        env:
-          NAME: ${{ secrets.DOCKER_USERNAME }}
-          REPO: instrumer-prod
-        run: |
-          docker build -t $REPO .
-          docker tag $REPO:latest $NAME/$REPO:latest
-          docker push $NAME/$REPO:latest
-
-  # 테스트 서버 배포 (self-hosted runner: label = test)
+  # ============================================
+  # DEPLOY: 테스트 서버 배포
+  # ============================================
   deploy-test:
     needs: build
     runs-on: [self-hosted, test]
     if: github.ref == 'refs/heads/develop'
-    name: Deploy to Test Server (Self-hosted Runner)
+    name: Deploy to Test Server
 
     steps:
-      - name: Docker login (on TEST EC2)
+      # 권한 설정
+      - name: Setup Permissions
+        run: |
+          sudo chown -R $USER:$USER ${{ github.workspace }} || true
+
+      # Docker 인증
+      - name: Docker Login
         run: |
           echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # [수정 1] 권한 문제 해결을 위한 사전 작업 (root 권한으로 workspace 소유권 복구)
-      - name: Fix permissions before checkout
-        run: |
-          # 현재 디렉토리(workspace)의 소유권을 현재 사용자(ubuntu)로 강제 변경
-          sudo chown -R $USER:$USER . || true
-          # 혹은 DB 폴더만 강제 삭제하고 싶다면 아래 주석 해제
-          # sudo rm -rf db/mysql
-
-      - name: Clean up Docker to free space
+      # Docker 정리
+      - name: Clean up Docker
         run: |
           sudo docker container prune -f || true
           sudo docker image prune -a -f || true
           sudo docker volume prune -f || true
           sudo docker network prune -f || true
 
+      # 코드 체크아웃
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Deploy to Test Server
+      # 배포
+      - name: Deploy Application
         env:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: |
           # 최신 이미지 pull
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
           
-          # 프로젝트 디렉토리로 이동 (Github Actions workspace 사용)
+          # 프로젝트 디렉토리로 이동
           cd ${{ github.workspace }}
           
           # .env 파일 생성
@@ -118,41 +121,49 @@ jobs:
           MYSQL_USER=instrumer
           MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           EOF
           
-          # [수정 2] docker-compose -> docker compose (V2) 사용
-          # 권한 문제 예방을 위해 docker-compose.yml이 있는 위치에서 실행
+          # Docker Compose로 배포
           sudo docker compose down || true
           sudo docker compose up -d
 
-  # 운영 서버 배포 (self-hosted runner: label = prod) – 나중에 러너 붙이면 사용
+  # ============================================
+  # DEPLOY: 운영 서버 배포
+  # ============================================
   deploy-prod:
     needs: build
     runs-on: [self-hosted, prod]
     if: github.ref == 'refs/heads/master'
-    name: Deploy to Production Server (Self-hosted Runner)
+    name: Deploy to Production Server
 
     steps:
-      - name: Docker login (on PROD EC2)
+      # 권한 설정
+      - name: Setup Permissions
+        run: |
+          sudo chown -R $USER:$USER ${{ github.workspace }} || true
+
+      # Docker 인증
+      - name: Docker Login
         run: |
           echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      - name: Clean up Docker to free space
+      # Docker 정리
+      - name: Clean up Docker
         run: |
           sudo docker container prune -f || true
           sudo docker image prune -a -f || true
           sudo docker volume prune -f || true
           sudo docker network prune -f || true
 
-      - name: Deploy to Production Server
+      # 배포
+      - name: Deploy Application
         run: |
           # 기존 컨테이너 종료 및 삭제
           sudo docker ps -q --filter "name=instrumer-prod" | grep -q . && \
             sudo docker stop instrumer-prod && sudo docker rm instrumer-prod || true
 
-          # 최신 이미지 pull 및 실행 (--network host로 호스트 네트워크 사용)
+          # 최신 이미지 pull 및 실행
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-prod:latest
           sudo docker run -d --name instrumer-prod --rm --network host \
             ${{ secrets.DOCKER_USERNAME }}/instrumer-prod:latest
