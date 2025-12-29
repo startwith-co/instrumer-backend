@@ -14,6 +14,7 @@ import instrumers.backend.user.user.util.UserType;
 import instrumers.backend.user.vendor.model.VendorEntity;
 import instrumers.backend.user.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,71 +27,94 @@ import static instrumers.backend.solution.controller.dto.response.SolutionReview
 @Service
 @RequiredArgsConstructor
 public class SolutionReviewService {
-    private final UserRepository userRepository;
-    private final SolutionRepository solutionRepository;
-    private final SolutionReviewRepository solutionReviewRepository;
-    private final ConsumerRepository consumerRepository;
-    private final VendorRepository vendorRepository;
+	private final UserRepository userRepository;
+	private final SolutionRepository solutionRepository;
+	private final SolutionReviewRepository solutionReviewRepository;
+	private final ConsumerRepository consumerRepository;
+	private final VendorRepository vendorRepository;
 
-    @Transactional
-    public CreateSolutionReviewResponse create(Long userSeq, CreateSolutionReviewRequest request) {
-        UserEntity userEntity = userRepository.findByUserSeqLock(userSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 회원입니다."
-                ));
-        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(request.solutionSeq())
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 솔루션입니다."
-                ));
+	@Transactional
+	public CreateSolutionReviewResponse create(Long userSeq, CreateSolutionReviewRequest request) {
+		UserEntity userEntity = userRepository.findByUserSeqLock(userSeq)
+			.orElseThrow(() -> new NotFoundException(
+				HttpStatus.NOT_FOUND.value(),
+				"존재하지 않는 회원입니다."
+			));
+		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(request.solutionSeq())
+			.orElseThrow(() -> new NotFoundException(
+				HttpStatus.NOT_FOUND.value(),
+				"존재하지 않는 솔루션입니다."
+			));
 
-        if (request.context().length() > 240) {
-            throw new BadRequestException(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "리뷰 글자수는 240자가 최대입니다."
-            );
-        }
+		if (request.context().length() > 240) {
+			throw new BadRequestException(
+				HttpStatus.BAD_REQUEST.value(),
+				"리뷰 글자수는 240자가 최대입니다."
+			);
+		}
 
-        SolutionReviewEntity solutionReviewEntity = SolutionReviewEntity.builder()
-                .context(request.context())
-                .rate(request.rate())
-                .solutionEntity(solutionEntity)
-                .userEntity(userEntity)
-                .build();
-        solutionReviewRepository.save(solutionReviewEntity);
+		SolutionReviewEntity solutionReviewEntity = SolutionReviewEntity.builder()
+			.context(request.context())
+			.rate(request.rate())
+			.solutionEntity(solutionEntity)
+			.userEntity(userEntity)
+			.build();
+		solutionReviewRepository.save(solutionReviewEntity);
 
-        return new CreateSolutionReviewResponse(solutionReviewEntity.getSolutionReviewSeq());
-    }
+		return new CreateSolutionReviewResponse(solutionReviewEntity.getSolutionReviewSeq());
+	}
 
-    @Transactional(readOnly = true)
-    public List<GetSolutionReviewResponse> get(Long solutionSeq) {
-        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 솔루션입니다."
-                ));
+	@Transactional(readOnly = true)
+	public List<GetSolutionReviewResponse> get(Long solutionSeq) {
+		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
+			.orElseThrow(() -> new NotFoundException(
+				HttpStatus.NOT_FOUND.value(),
+				"존재하지 않는 솔루션입니다."
+			));
 
-        return solutionReviewRepository.findAllBySolutionEntity(solutionEntity).stream()
-                .map(review -> {
-                    UserEntity userEntity = review.getUserEntity();
-                    String businessName = null;
+		return solutionReviewRepository.findAllBySolutionEntity(solutionEntity).stream()
+			.map(review -> {
+				UserEntity userEntity = review.getUserEntity();
+				String businessName = null;
 
-                    if (userEntity.getUserType() == UserType.CONSUMER) {
-                        businessName = consumerRepository.findByUserEntity(userEntity)
-                                .map(ConsumerEntity::getBusinessName)
-                                .orElse(null);
-                    } else if (userEntity.getUserType() == UserType.VENDOR) {
-                        businessName = vendorRepository.findByUserEntity(userEntity)
-                                .map(VendorEntity::getBusinessName)
-                                .orElse(null);
-                    }
+				if (userEntity.getUserType() == UserType.CONSUMER) {
+					businessName = consumerRepository.findByUserEntity(userEntity)
+						.map(ConsumerEntity::getBusinessName)
+						.orElse(null);
+				} else if (userEntity.getUserType() == UserType.VENDOR) {
+					businessName = vendorRepository.findByUserEntity(userEntity)
+						.map(VendorEntity::getBusinessName)
+						.orElse(null);
+				}
 
-                    return new GetSolutionReviewResponse(
-                            review.getSolutionReviewSeq(), userEntity.getProfileImageUrl(), businessName,
-                            review.getRate(), review.getContext(), review.getCreatedAt()
-                    );
-                })
-                .toList();
-    }
+				return new GetSolutionReviewResponse(
+					review.getSolutionReviewSeq(), userEntity.getProfileImageUrl(), businessName,
+					review.getRate(), review.getContext(), review.getCreatedAt()
+				);
+			})
+			.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public GetSolutionReviewInfoResponse getSolutionReviewInfo(Long solutionSeq) {
+		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
+			.orElseThrow(() -> new NotFoundException(
+				HttpStatus.NOT_FOUND.value(),
+				"존재하지 않는 솔루션입니다."
+			));
+
+		List<SolutionReviewEntity> reviews =
+			solutionReviewRepository.findAllBySolutionEntity(solutionEntity);
+
+		long count = reviews.size();
+		double average = reviews.stream()
+			.mapToDouble(SolutionReviewEntity::getRate)
+			.average()
+			.orElse(0.0);
+
+		// 소수점 둘째자리에서 반올림하여 첫째자리까지
+		double roundedAverage = Math.round(average * 10.0) / 10.0;
+
+		return new GetSolutionReviewInfoResponse(count, roundedAverage);
+	}
 }

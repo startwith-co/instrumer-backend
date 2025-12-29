@@ -52,6 +52,14 @@ public class SolutionPublicController {
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
 	}
 
+	@GetMapping("/{solutionSeq}/reviews")
+	@Operation(summary = "솔루션 리뷰 정보 조회 (평점, 개수)")
+	public ResponseEntity<BaseResponse<GetSolutionReviewInfoResponse>> getSolutionReviewInfo(@PathVariable Long solutionSeq) {
+		GetSolutionReviewInfoResponse response = reviewService.getSolutionReviewInfo(solutionSeq);
+
+		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+	}
+
 	@GetMapping("/{solutionSeq}/vendor")
 	@Operation(summary = "솔루션 생성 벤더 정보 조회")
 	public ResponseEntity<BaseResponse<GetSolutionVendorResponse>> getSolutionVendor(@PathVariable Long solutionSeq) {
