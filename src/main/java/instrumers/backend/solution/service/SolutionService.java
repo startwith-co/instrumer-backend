@@ -22,13 +22,13 @@ import instrumers.backend.common.dto.PageInfo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionRequest.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionListResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionResponse.*;
-import static instrumers.backend.solution.controller.response.SolutionVendorResponse.*;
 
 @Service
 @RequiredArgsConstructor
@@ -160,11 +160,18 @@ public class SolutionService {
                         "존재하지 않는 솔루션입니다."
                 ));
 
+        // 모든 관련 데이터를 한 번에 조회 (N+1 문제 방지)
+        var images = solutionImageRepository.findAllBySolutionEntity(solutionEntity);
+        var plans = solutionPlanRepository.findAllBySolutionEntity(solutionEntity);
+        var keywords = solutionKeywordRepository.findAllBySolutionEntity(solutionEntity);
+        var planDetailsMap = solutionPlanDetailRepository.findAllBySolutionPlanEntityIn(plans)
+                .stream()
+                .collect(Collectors.groupingBy(detail -> detail.getSolutionPlanEntity().getSolutionPlanSeq(), Collectors.toList()));
+
         // 리뷰 정보 조회
         long reviewCount = solutionReviewRepository.countBySolutionEntity(solutionEntity);
         Double averageRate = solutionReviewRepository.getAverageRateBySolutionEntity(solutionEntity);
         double average = Math.round((averageRate != null ? averageRate : 0.0) * 10.0) / 10.0;
-        GetSolutionReviewInfo reviewInfo = new GetSolutionReviewInfo(reviewCount, average);
 
         // 벤더 정보 조회
         VendorEntity vendorEntity = vendorRepository.findByUserEntity(solutionEntity.getUserEntity())
@@ -172,10 +179,6 @@ public class SolutionService {
                         HttpStatus.NOT_FOUND.value(),
                         "존재하지 않는 기업 회원입니다."
                 ));
-        GetSolutionVendorInfo vendorInfo = new GetSolutionVendorInfo(
-                vendorEntity.getVendorSeq(),
-                vendorEntity.getBusinessName()
-        );
 
         return new GetSolutionResponse(
                 solutionEntity.getSolutionSeq(),
@@ -183,40 +186,44 @@ public class SolutionService {
                 solutionEntity.getExplanation(),
                 solutionEntity.getCategory(),
                 solutionEntity.getPrice(),
-                solutionImageRepository.findAllBySolutionEntity(solutionEntity).stream()
+                images.stream()
                         .map(image -> new GetSolutionImageRequest(image.getImageUrl(), image.getImageType()))
                         .toList(),
-                solutionPlanRepository.findAllBySolutionEntity(solutionEntity).stream()
+                plans.stream()
                         .map(plan -> new GetSolutionPlanRequest(
                                 plan.getName(),
                                 plan.getSubName(),
                                 plan.getPrice(),
                                 plan.getPlanType(),
-                                solutionPlanDetailRepository.findAllBySolutionPlanEntity(plan).stream()
+                                planDetailsMap.getOrDefault(plan.getSolutionPlanSeq(), Collections.emptyList()).stream()
                                         .map(detail -> new GetSolutionPlanDetailRequest(detail.getName(), detail.getContext()))
                                         .toList()
                         ))
                         .toList(),
-                solutionKeywordRepository.findAllBySolutionEntity(solutionEntity).stream()
+                keywords.stream()
                         .map(SolutionKeywordEntity::getKeyword)
                         .toList(),
-                reviewInfo,
-                vendorInfo
+                reviewCount,
+                average,
+                vendorEntity.getVendorSeq(),
+                vendorEntity.getBusinessName()
         );
     }
 
     @Transactional
     public void delete(Long userSeq, Long solutionSeq) {
-        userRepository.findById(userSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 회원입니다."
-                ));
         SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
                 .orElseThrow(() -> new NotFoundException(
                         HttpStatus.NOT_FOUND.value(),
                         "존재하지 않는 솔루션입니다."
                 ));
+
+        if (!solutionEntity.getUserEntity().getUserSeq().equals(userSeq)) {
+            throw new BadRequestException(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "본인의 솔루션만 삭제할 수 있습니다."
+            );
+        }
 
         solutionRepository.delete(solutionEntity);
     }

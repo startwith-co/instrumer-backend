@@ -11,12 +11,6 @@ public class SolutionReviewResponse {
 	) {
 	}
 
-	public record GetSolutionReviewInfoResponse(
-		Long cnt,
-		Double average
-	) {
-	}
-
 	public record GetSolutionReviewPageResponse(
 		List<GetSolutionReviewResponse> content,
 		PageInfo pageInfo

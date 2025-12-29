@@ -36,12 +36,7 @@ public class SolutionConsumerController {
 
         Long userSeq = (Long) request.getAttribute("userSeq");
 
-        CreateSolutionReviewRequest requestWithPathSeq = new CreateSolutionReviewRequest(
-                solutionSeq, 
-                dto.context(),
-                dto.rate()
-        );
-
+        CreateSolutionReviewRequest requestWithPathSeq = new CreateSolutionReviewRequest(solutionSeq, dto.context(), dto.rate());
         CreateSolutionReviewResponse response = reviewService.create(userSeq, requestWithPathSeq);
 
         return ResponseEntity.ok()

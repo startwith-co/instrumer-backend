@@ -19,20 +19,11 @@ public class SolutionResponse {
             List<GetSolutionImageRequest> images,
             List<GetSolutionPlanRequest> plans,
             List<String> keywords,
-            GetSolutionReviewInfo reviewInfo,
-            GetSolutionVendorInfo vendorInfo
+            Long reviewCnt,
+            Double reviewAverage,
+            Long vendorSeq,
+            String vendorBusinessName
     ) {
-        public record GetSolutionReviewInfo(
-                Long cnt,
-                Double average
-        ) {
-        }
-
-        public record GetSolutionVendorInfo(
-                Long vendorSeq,
-                String businessName
-        ) {
-        }
         public record GetSolutionImageRequest(
                 String imageUrl,
                 String imageType

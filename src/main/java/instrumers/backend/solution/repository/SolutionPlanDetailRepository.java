@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface SolutionPlanDetailRepository extends JpaRepository<SolutionPlanDetailEntity, Long> {
-    List<SolutionPlanDetailEntity> findAllBySolutionPlanEntity(SolutionPlanEntity solutionPlanEntity);
+    List<SolutionPlanDetailEntity> findAllBySolutionPlanEntityIn(List<SolutionPlanEntity> solutionPlanEntities);
 }

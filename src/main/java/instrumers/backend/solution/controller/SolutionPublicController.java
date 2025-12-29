@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import static instrumers.backend.solution.controller.response.SolutionResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionReviewResponse.*;
-import static instrumers.backend.solution.controller.response.SolutionVendorResponse.*;
 
 @RestController
 @RequiredArgsConstructor

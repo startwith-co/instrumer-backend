@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionReviewRequest.*;
 import static instrumers.backend.solution.controller.response.SolutionReviewResponse.*;
@@ -77,19 +79,36 @@ public class SolutionReviewService {
 			));
 
 		Page<SolutionReviewEntity> reviewPage = solutionReviewRepository.findAllBySolutionEntity(solutionEntity, pageable);
-		List<GetSolutionReviewResponse> content = reviewPage.getContent().stream()
+		List<SolutionReviewEntity> reviews = reviewPage.getContent();
+
+		// N+1 문제 방지: 모든 userEntity를 한 번에 조회
+		java.util.Set<UserEntity> userEntities = reviews.stream()
+			.map(SolutionReviewEntity::getUserEntity)
+			.collect(Collectors.toSet());
+
+		Map<Long, String> consumerBusinessNameMap = consumerRepository.findAllByUserEntityIn(
+			userEntities.stream().filter(u -> u.getUserType() == UserType.CONSUMER).toList()
+		).stream().collect(Collectors.toMap(
+			c -> c.getUserEntity().getUserSeq(),
+			ConsumerEntity::getBusinessName
+		));
+
+		Map<Long, String> vendorBusinessNameMap = vendorRepository.findAllByUserEntityIn(
+			userEntities.stream().filter(u -> u.getUserType() == UserType.VENDOR).toList()
+		).stream().collect(Collectors.toMap(
+			v -> v.getUserEntity().getUserSeq(),
+			VendorEntity::getBusinessName
+		));
+
+		List<GetSolutionReviewResponse> content = reviews.stream()
 			.map(review -> {
 				UserEntity userEntity = review.getUserEntity();
 				String businessName = null;
 
 				if (userEntity.getUserType() == UserType.CONSUMER) {
-					businessName = consumerRepository.findByUserEntity(userEntity)
-						.map(ConsumerEntity::getBusinessName)
-						.orElse(null);
+					businessName = consumerBusinessNameMap.get(userEntity.getUserSeq());
 				} else if (userEntity.getUserType() == UserType.VENDOR) {
-					businessName = vendorRepository.findByUserEntity(userEntity)
-						.map(VendorEntity::getBusinessName)
-						.orElse(null);
+					businessName = vendorBusinessNameMap.get(userEntity.getUserSeq());
 				}
 
 				return new GetSolutionReviewResponse(
@@ -102,20 +121,5 @@ public class SolutionReviewService {
 		PageInfo pageInfo = PageInfo.from(reviewPage);
 
 		return new GetSolutionReviewPageResponse(content, pageInfo);
-	}
-
-	@Transactional(readOnly = true)
-	public GetSolutionReviewInfoResponse getSolutionReviewInfo(Long solutionSeq) {
-		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
-			.orElseThrow(() -> new NotFoundException(
-				HttpStatus.NOT_FOUND.value(),
-				"존재하지 않는 솔루션입니다."
-			));
-
-		long count = solutionReviewRepository.countBySolutionEntity(solutionEntity);
-		Double averageRate = solutionReviewRepository.getAverageRateBySolutionEntity(solutionEntity);
-		double average = Math.round((averageRate != null ? averageRate : 0.0) * 10.0) / 10.0;
-
-		return new GetSolutionReviewInfoResponse(count, average);
 	}
 }

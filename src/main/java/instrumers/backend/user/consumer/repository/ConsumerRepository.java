@@ -5,9 +5,11 @@ import instrumers.backend.user.user.model.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ConsumerRepository extends JpaRepository<ConsumerEntity, Long> {
     Optional<ConsumerEntity> findByUserEntity(UserEntity userEntity);
+    List<ConsumerEntity> findAllByUserEntityIn(List<UserEntity> userEntities);
 }
