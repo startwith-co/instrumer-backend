@@ -15,7 +15,7 @@ public interface SolutionReviewRepository extends JpaRepository<SolutionReviewEn
             FROM SolutionReviewEntity sr
             JOIN FETCH sr.solutionEntity s
             JOIN FETCH sr.userEntity u
-            WHERE s = :solutionEntity
+            WHERE s = :solutionEntity AND sr.deleted = false
             ORDER BY sr.createdAt DESC
             """)
     List<SolutionReviewEntity> findAllBySolutionEntity(SolutionEntity solutionEntity);

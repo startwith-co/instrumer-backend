@@ -107,14 +107,13 @@ public class SolutionReviewService {
 			solutionReviewRepository.findAllBySolutionEntity(solutionEntity);
 
 		long count = reviews.size();
-		double average = reviews.stream()
-			.mapToDouble(SolutionReviewEntity::getRate)
-			.average()
-			.orElse(0.0);
+		double average = Math.round(
+			reviews.stream()
+				.mapToDouble(SolutionReviewEntity::getRate)
+				.average()
+				.orElse(0.0) * 10.0
+		) / 10.0;
 
-		// 소수점 둘째자리에서 반올림하여 첫째자리까지
-		double roundedAverage = Math.round(average * 10.0) / 10.0;
-
-		return new GetSolutionReviewInfoResponse(count, roundedAverage);
+		return new GetSolutionReviewInfoResponse(count, average);
 	}
 }
