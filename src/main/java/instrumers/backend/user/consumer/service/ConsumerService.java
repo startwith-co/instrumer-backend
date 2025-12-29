@@ -59,7 +59,7 @@ public class ConsumerService {
     @Transactional
     public void update(Long userSeq, UpdateConsumerRequest request) {
         try {
-            UserEntity userEntity = userRepository.findByUserSeq(userSeq)
+            UserEntity userEntity = userRepository.findById(userSeq)
                     .orElseThrow(() -> new NotFoundException(
                             HttpStatus.NOT_FOUND.value(),
                             "존재하지 않는 회원입니다."

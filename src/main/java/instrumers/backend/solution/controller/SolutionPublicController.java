@@ -78,4 +78,19 @@ public class SolutionPublicController {
 
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
 	}
+
+	@GetMapping("/list")
+	@Operation(summary = "솔루션 리스트 조회")
+	public ResponseEntity<BaseResponse<GetSolutionListResponse>> getSolutionList(
+			@RequestParam(required = false) String category,
+			@RequestParam(required = false) Long minPrice,
+			@RequestParam(required = false) Long maxPrice,
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size
+	) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		GetSolutionListResponse response = solutionService.getSolutionList(category, minPrice, maxPrice, pageable);
+
+		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+	}
 }

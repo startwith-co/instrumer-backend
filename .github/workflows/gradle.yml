@@ -77,7 +77,7 @@ jobs:
   # ============================================
   deploy-test:
     needs: build
-    runs-on: [self-hosted, test]
+    runs-on: [ self-hosted, test ]
     if: github.ref == 'refs/heads/develop'
     name: Deploy to Test Server
 
@@ -133,7 +133,7 @@ jobs:
   # ============================================
   deploy-prod:
     needs: build
-    runs-on: [self-hosted, prod]
+    runs-on: [ self-hosted, prod ]
     if: github.ref == 'refs/heads/master'
     name: Deploy to Production Server
 

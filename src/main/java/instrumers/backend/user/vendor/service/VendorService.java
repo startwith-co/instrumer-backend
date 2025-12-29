@@ -61,7 +61,7 @@ public class VendorService {
     @Transactional
     public void update(Long userSeq, UpdateVendorRequest request) {
         try {
-            UserEntity userEntity = userRepository.findByUserSeq(userSeq)
+            UserEntity userEntity = userRepository.findById(userSeq)
                     .orElseThrow(() -> new NotFoundException(
                             HttpStatus.NOT_FOUND.value(),
                             "존재하지 않는 회원입니다."
