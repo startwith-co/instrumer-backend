@@ -6,8 +6,8 @@ services:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_DATABASE: instrumer
+      MYSQL_USER: instrumer
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: Asia/Seoul
@@ -26,14 +26,11 @@ services:
       TZ: Asia/Seoul
     ports:
       - "6379:6379"
-    volumes:
-      - ./redis/data:/data
-      - ./redis/conf/redis.conf:/usr/local/conf/redis.conf
     labels:
       - "name=redis"
       - "mode=standalone"
     restart: always
-    command: [ "redis-server", "/usr/local/conf/redis.conf" ]
+    command: redis-server --requirepass ${REDIS_PASSWORD}
     networks:
       - docker-bridge
 
