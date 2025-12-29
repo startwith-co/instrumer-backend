@@ -1,7 +1,6 @@
 package instrumers.backend.solution.controller;
 
 import instrumers.backend.base.BaseResponse;
-import instrumers.backend.solution.controller.dto.response.SolutionVendorResponse;
 import instrumers.backend.solution.service.SolutionService;
 import instrumers.backend.solution.service.SolutionReviewService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +56,7 @@ public class SolutionPublicController {
 	 * - 평점 평균 및 리뷰 개수
 	 * - 인증 불필요
 	 */
-	@GetMapping("/{solutionSeq}/reviews/info")
+	@GetMapping("/{solutionSeq}/review")
 	@Operation(summary = "솔루션 리뷰 정보 조회 (평점, 개수)")
 	public ResponseEntity<BaseResponse<GetSolutionReviewInfoResponse>> getSolutionReviewInfo(@PathVariable Long solutionSeq) {
 		GetSolutionReviewInfoResponse response = reviewService.getSolutionReviewInfo(solutionSeq);

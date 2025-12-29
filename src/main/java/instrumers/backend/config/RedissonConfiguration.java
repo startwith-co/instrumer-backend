@@ -23,12 +23,17 @@ public class RedissonConfiguration {
         Config config = new Config();
 
         String address = "redis://" + host + ":" + port;
-        config.useSingleServer()
-                .setAddress(address);
+        var singleServerConfig = config.useSingleServer()
+                .setAddress(address)
+                .setConnectionMinimumIdleSize(1)
+                .setConnectionPoolSize(10)
+                .setConnectTimeout(10000) // 10초 연결 타임아웃
+                .setTimeout(3000) // 3초 응답 타임아웃
+                .setRetryAttempts(3) // 3번 재시도
+                .setRetryInterval(1500); // 재시도 간격 1.5초
 
         if (password != null && !password.isBlank()) {
-            config.useSingleServer()
-                    .setPassword(password);
+            singleServerConfig.setPassword(password);
         }
 
         return Redisson.create(config);
