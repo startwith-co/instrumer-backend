@@ -11,16 +11,6 @@ public class SolutionReviewResponse {
 	) {
 	}
 
-	public record GetSolutionReviewResponse(
-		Long solutionReviewSeq,
-		String profileImageUrl,
-		String businessName,
-		Double rate,
-		String context,
-		LocalDateTime createdAt
-	) {
-	}
-
 	public record GetSolutionReviewInfoResponse(
 		Long cnt,
 		Double average
@@ -31,5 +21,14 @@ public class SolutionReviewResponse {
 		List<GetSolutionReviewResponse> content,
 		PageInfo pageInfo
 	) {
+		public record GetSolutionReviewResponse(
+				Long solutionReviewSeq,
+				String profileImageUrl,
+				String businessName,
+				Double rate,
+				String context,
+				LocalDateTime createdAt
+		) {
+		}
 	}
 }

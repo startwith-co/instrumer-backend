@@ -26,6 +26,7 @@ import java.util.List;
 
 import static instrumers.backend.solution.controller.request.SolutionReviewRequest.*;
 import static instrumers.backend.solution.controller.response.SolutionReviewResponse.*;
+import static instrumers.backend.solution.controller.response.SolutionReviewResponse.GetSolutionReviewPageResponse.*;
 
 @Service
 @RequiredArgsConstructor
