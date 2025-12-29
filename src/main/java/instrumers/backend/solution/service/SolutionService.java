@@ -22,10 +22,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static instrumers.backend.solution.controller.dto.request.SolutionRequest.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionResponse.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionResponse.GetSolutionResponse.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionVendorResponse.*;
+import static instrumers.backend.solution.controller.request.SolutionRequest.*;
+import static instrumers.backend.solution.controller.response.SolutionResponse.*;
+import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionResponse.*;
+import static instrumers.backend.solution.controller.response.SolutionVendorResponse.*;
 
 @Service
 @RequiredArgsConstructor

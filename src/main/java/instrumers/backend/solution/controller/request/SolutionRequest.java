@@ -1,4 +1,4 @@
-package instrumers.backend.solution.controller.dto.request;
+package instrumers.backend.solution.controller.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -1,4 +1,6 @@
-package instrumers.backend.solution.controller.dto.response;
+package instrumers.backend.solution.controller.response;
+
+import instrumers.backend.common.dto.PageInfo;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,12 +29,7 @@ public class SolutionReviewResponse {
 
 	public record GetSolutionReviewPageResponse(
 		List<GetSolutionReviewResponse> content,
-		int page,
-		int size,
-		long totalElements,
-		int totalPages,
-		boolean hasNext,
-		boolean hasPrevious
+		PageInfo pageInfo
 	) {
 	}
 }

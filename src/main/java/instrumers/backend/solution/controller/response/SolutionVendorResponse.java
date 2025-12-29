@@ -1,4 +1,4 @@
-package instrumers.backend.solution.controller.dto.response;
+package instrumers.backend.solution.controller.response;
 
 public class SolutionVendorResponse {
 	public record GetSolutionVendorResponse(

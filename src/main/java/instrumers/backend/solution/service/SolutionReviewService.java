@@ -1,5 +1,6 @@
 package instrumers.backend.solution.service;
 
+import instrumers.backend.common.dto.PageInfo;
 import instrumers.backend.exception.BadRequestException;
 import instrumers.backend.exception.NotFoundException;
 import instrumers.backend.solution.domain.SolutionReviewEntity;
@@ -23,8 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static instrumers.backend.solution.controller.dto.request.SolutionReviewRequest.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionReviewResponse.*;
+import static instrumers.backend.solution.controller.request.SolutionReviewRequest.*;
+import static instrumers.backend.solution.controller.response.SolutionReviewResponse.*;
 
 @Service
 @RequiredArgsConstructor
@@ -97,15 +98,9 @@ public class SolutionReviewService {
 			})
 			.toList();
 
-		return new GetSolutionReviewPageResponse(
-			content,
-			reviewPage.getNumber(),
-			reviewPage.getSize(),
-			reviewPage.getTotalElements(),
-			reviewPage.getTotalPages(),
-			reviewPage.hasNext(),
-			reviewPage.hasPrevious()
-		);
+		PageInfo pageInfo = PageInfo.from(reviewPage);
+
+		return new GetSolutionReviewPageResponse(content, pageInfo);
 	}
 
 	@Transactional(readOnly = true)

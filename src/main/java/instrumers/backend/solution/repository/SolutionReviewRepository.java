@@ -2,6 +2,7 @@ package instrumers.backend.solution.repository;
 
 import instrumers.backend.solution.domain.SolutionReviewEntity;
 import instrumers.backend.solution.domain.SolutionEntity;
+import instrumers.backend.solution.repository.custom.SolutionReviewRepositoryCustom;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -10,7 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SolutionReviewRepository extends JpaRepository<SolutionReviewEntity, Long> {
+public interface SolutionReviewRepository extends JpaRepository<SolutionReviewEntity, Long>, SolutionReviewRepositoryCustom {
     @EntityGraph(attributePaths = {"userEntity"})
     @Query("""
             SELECT sr

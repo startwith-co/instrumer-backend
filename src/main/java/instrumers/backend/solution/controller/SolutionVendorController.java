@@ -12,8 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static instrumers.backend.solution.controller.dto.request.SolutionRequest.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionResponse.*;
+import static instrumers.backend.solution.controller.request.SolutionRequest.*;
+import static instrumers.backend.solution.controller.response.SolutionResponse.*;
 
 @RestController
 @RequiredArgsConstructor

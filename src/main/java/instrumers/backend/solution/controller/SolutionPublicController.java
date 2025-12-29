@@ -7,16 +7,16 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import static instrumers.backend.solution.controller.dto.response.SolutionResponse.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionReviewResponse.*;
-import static instrumers.backend.solution.controller.dto.response.SolutionVendorResponse.*;
+import static instrumers.backend.solution.controller.response.SolutionResponse.*;
+import static instrumers.backend.solution.controller.response.SolutionReviewResponse.*;
+import static instrumers.backend.solution.controller.response.SolutionVendorResponse.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -49,8 +49,10 @@ public class SolutionPublicController {
 	@Operation(summary = "솔루션 리뷰 목록 조회 (페이징)")
 	public ResponseEntity<BaseResponse<GetSolutionReviewPageResponse>> getReviews(
 			@PathVariable Long solutionSeq,
-			@PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+			@RequestParam(defaultValue = "0") int page,
+			@RequestParam(defaultValue = "10") int size
 	) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		GetSolutionReviewPageResponse response = reviewService.get(solutionSeq, pageable);
 
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
