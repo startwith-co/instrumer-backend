@@ -18,8 +18,21 @@ public class SolutionResponse {
             Long price,
             List<GetSolutionImageRequest> images,
             List<GetSolutionPlanRequest> plans,
-            List<String> keywords
+            List<String> keywords,
+            GetSolutionReviewInfo reviewInfo,
+            GetSolutionVendorInfo vendorInfo
     ) {
+        public record GetSolutionReviewInfo(
+                Long cnt,
+                Double average
+        ) {
+        }
+
+        public record GetSolutionVendorInfo(
+                Long vendorSeq,
+                String businessName
+        ) {
+        }
         public record GetSolutionImageRequest(
                 String imageUrl,
                 String imageType

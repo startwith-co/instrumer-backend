@@ -153,12 +153,29 @@ public class SolutionService {
     }
 
     @Transactional(readOnly = true)
-    public GetSolutionResponse get(Long solutionSeq) {
+    public GetSolutionResponse getSolution(Long solutionSeq) {
         SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
                 .orElseThrow(() -> new NotFoundException(
                         HttpStatus.NOT_FOUND.value(),
                         "존재하지 않는 솔루션입니다."
                 ));
+
+        // 리뷰 정보 조회
+        long reviewCount = solutionReviewRepository.countBySolutionEntity(solutionEntity);
+        Double averageRate = solutionReviewRepository.getAverageRateBySolutionEntity(solutionEntity);
+        double average = Math.round((averageRate != null ? averageRate : 0.0) * 10.0) / 10.0;
+        GetSolutionReviewInfo reviewInfo = new GetSolutionReviewInfo(reviewCount, average);
+
+        // 벤더 정보 조회
+        VendorEntity vendorEntity = vendorRepository.findByUserEntity(solutionEntity.getUserEntity())
+                .orElseThrow(() -> new NotFoundException(
+                        HttpStatus.NOT_FOUND.value(),
+                        "존재하지 않는 기업 회원입니다."
+                ));
+        GetSolutionVendorInfo vendorInfo = new GetSolutionVendorInfo(
+                vendorEntity.getVendorSeq(),
+                vendorEntity.getBusinessName()
+        );
 
         return new GetSolutionResponse(
                 solutionEntity.getSolutionSeq(),
@@ -182,7 +199,9 @@ public class SolutionService {
                         .toList(),
                 solutionKeywordRepository.findAllBySolutionEntity(solutionEntity).stream()
                         .map(SolutionKeywordEntity::getKeyword)
-                        .toList()
+                        .toList(),
+                reviewInfo,
+                vendorInfo
         );
     }
 
@@ -200,23 +219,6 @@ public class SolutionService {
                 ));
 
         solutionRepository.delete(solutionEntity);
-    }
-
-    @Transactional(readOnly = true)
-    public GetSolutionVendorResponse getSolutionVendor(Long solutionSeq) {
-        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 솔루션입니다."
-                ));
-
-        VendorEntity vendorEntity = vendorRepository.findByUserEntity(solutionEntity.getUserEntity())
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 기업 회원입니다."
-                ));
-
-        return new GetSolutionVendorResponse(vendorEntity.getVendorSeq(), vendorEntity.getBusinessName());
     }
 
     @Transactional(readOnly = true)

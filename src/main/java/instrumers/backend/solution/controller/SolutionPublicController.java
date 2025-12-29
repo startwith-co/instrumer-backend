@@ -34,7 +34,7 @@ public class SolutionPublicController {
 	@GetMapping("/{solutionSeq}")
 	@Operation(summary = "솔루션 상세 조회")
 	public ResponseEntity<BaseResponse<GetSolutionResponse>> getSolution(@PathVariable Long solutionSeq) {
-		GetSolutionResponse response = solutionService.get(solutionSeq);
+		GetSolutionResponse response = solutionService.getSolution(solutionSeq);
 
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
 	}
@@ -54,27 +54,6 @@ public class SolutionPublicController {
 	) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
 		GetSolutionReviewPageResponse response = reviewService.get(solutionSeq, pageable);
-
-		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-	}
-
-	/**
-	 * 솔루션 리뷰 통계 정보 조회
-	 * - 평점 평균 및 리뷰 개수
-	 * - 인증 불필요
-	 */
-	@GetMapping("/{solutionSeq}/review")
-	@Operation(summary = "솔루션 리뷰 정보 조회 (평점, 개수)")
-	public ResponseEntity<BaseResponse<GetSolutionReviewInfoResponse>> getSolutionReviewInfo(@PathVariable Long solutionSeq) {
-		GetSolutionReviewInfoResponse response = reviewService.getSolutionReviewInfo(solutionSeq);
-
-		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-	}
-
-	@GetMapping("/{solutionSeq}/vendor")
-	@Operation(summary = "솔루션 생성 벤더 정보 조회")
-	public ResponseEntity<BaseResponse<GetSolutionVendorResponse>> getSolutionVendor(@PathVariable Long solutionSeq) {
-		GetSolutionVendorResponse response = solutionService.getSolutionVendor(solutionSeq);
 
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
 	}
