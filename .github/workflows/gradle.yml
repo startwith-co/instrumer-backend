@@ -84,6 +84,14 @@ jobs:
         run: |
           echo "${{ secrets.DOCKER_TOKEN }}" | sudo docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
+      # [수정 1] 권한 문제 해결을 위한 사전 작업 (root 권한으로 workspace 소유권 복구)
+      - name: Fix permissions before checkout
+        run: |
+          # 현재 디렉토리(workspace)의 소유권을 현재 사용자(ubuntu)로 강제 변경
+          sudo chown -R $USER:$USER . || true
+          # 혹은 DB 폴더만 강제 삭제하고 싶다면 아래 주석 해제
+          # sudo rm -rf db/mysql
+
       - name: Clean up Docker to free space
         run: |
           sudo docker container prune -f || true
@@ -101,11 +109,10 @@ jobs:
           # 최신 이미지 pull
           sudo docker pull ${{ secrets.DOCKER_USERNAME }}/instrumer-develop:latest
           
-          # docker-compose로 재시작 (같은 네트워크로 묶임)
-          # 프로젝트 디렉토리로 이동 (self-hosted runner의 실제 프로젝트 경로)
-          cd ${{ github.workspace }} || cd /home/ubuntu/instrumer-backend || cd ~/instrumer-backend || pwd
+          # 프로젝트 디렉토리로 이동 (Github Actions workspace 사용)
+          cd ${{ github.workspace }}
           
-          # .env 파일 생성 (docker-compose에서 사용할 환경 변수)
+          # .env 파일 생성
           cat > .env << EOF
           MYSQL_DATABASE=instrumer
           MYSQL_USER=instrumer
@@ -114,8 +121,10 @@ jobs:
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           EOF
           
-          # docker-compose로 시작 (이미 실행 중이면 재시작, 없으면 새로 시작)
-          sudo docker-compose up -d
+          # [수정 2] docker-compose -> docker compose (V2) 사용
+          # 권한 문제 예방을 위해 docker-compose.yml이 있는 위치에서 실행
+          sudo docker compose down || true
+          sudo docker compose up -d
 
   # 운영 서버 배포 (self-hosted runner: label = prod) – 나중에 러너 붙이면 사용
   deploy-prod:
