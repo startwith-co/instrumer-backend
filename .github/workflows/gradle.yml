@@ -118,7 +118,7 @@ jobs:
           MYSQL_USER=instrumer
           MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
           MYSQL_ROOT_PASSWORD=${{ secrets.MYSQL_ROOT_PASSWORD }}
-          MYSQL_ROOT_PASSWORD=${{ secrets.REDIS_PASSWORD }}
+          REDIS_PASSWORD=${{ secrets.REDIS_PASSWORD }}
           DOCKER_USERNAME=${{ secrets.DOCKER_USERNAME }}
           EOF
           
