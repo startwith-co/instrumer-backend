@@ -64,7 +64,7 @@ public class SolutionReviewService {
     }
 
     @Transactional(readOnly = true)
-    public List<GetSolutionReviewResponse> get(Long userSeq, Long solutionSeq) {
+    public List<GetSolutionReviewResponse> get(Long solutionSeq) {
         SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
                 .orElseThrow(() -> new NotFoundException(
                         HttpStatus.NOT_FOUND.value(),

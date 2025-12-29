@@ -1,6 +1,7 @@
 package instrumers.backend.solution.domain;
 
 import instrumers.backend.user.user.model.UserEntity;
+import instrumers.backend.user.vendor.model.VendorEntity;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
