@@ -202,7 +202,8 @@ public class SolutionService {
                 reviewCount,
                 average,
                 vendorEntity.getVendorSeq(),
-                vendorEntity.getBusinessName()
+                vendorEntity.getBusinessName(),
+                solutionEntity.getUserEntity().getProfileImageUrl()
         );
     }
 

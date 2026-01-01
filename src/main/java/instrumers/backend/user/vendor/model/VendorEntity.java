@@ -2,16 +2,7 @@ package instrumers.backend.user.vendor.model;
 
 import instrumers.backend.base.BaseTimeEntity;
 import instrumers.backend.user.user.model.UserEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.Version;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,8 +39,8 @@ public class VendorEntity extends BaseTimeEntity {
     @Column(name = "account", nullable = true, unique = false)
     private String account;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_seq", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_seq", nullable = false, unique = true)
     private UserEntity userEntity;
 
     @Version

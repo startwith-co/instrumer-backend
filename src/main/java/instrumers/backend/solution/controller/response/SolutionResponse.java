@@ -21,7 +21,8 @@ public class SolutionResponse {
             Long reviewCnt,
             Double reviewAverage,
             Long vendorSeq,
-            String vendorBusinessName
+            String vendorBusinessName,
+            String profileImageUrl
     ) {
         public record GetSolutionImageRequest(
                 String imageUrl,
