@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionRequest.*;
@@ -65,11 +66,15 @@ public class SolutionService {
                 .userEntity(userEntity)
                 .build());
 
-        request.images().forEach(image -> solutionImageRepository.save(SolutionImageEntity.builder()
-                .imageUrl(image.imageUrl())
-                .imageType(image.imageType())
-                .solutionEntity(solutionEntity)
-                .build()));
+        // Images 배치 저장
+        List<SolutionImageEntity> imageEntities = request.images().stream()
+                .map(image -> SolutionImageEntity.builder()
+                        .imageUrl(image.imageUrl())
+                        .imageType(image.imageType())
+                        .solutionEntity(solutionEntity)
+                        .build())
+                .collect(Collectors.toList());
+        solutionImageRepository.bulkSave(imageEntities);
 
         if (request.plans() != null) {
             request.plans().forEach(plan -> {
@@ -81,22 +86,28 @@ public class SolutionService {
                         .solutionEntity(solutionEntity)
                         .build());
 
-                if (plan.details() != null) {
-                    plan.details()
-                            .forEach(detail -> solutionPlanDetailRepository.save(SolutionPlanDetailEntity.builder()
+                if (plan.details() != null && !plan.details().isEmpty()) {
+                    List<SolutionPlanDetailEntity> details = plan.details().stream()
+                            .map(detail -> SolutionPlanDetailEntity.builder()
                                     .name(detail.name())
                                     .context(detail.context())
                                     .solutionPlanEntity(solutionPlanEntity)
-                                    .build()));
+                                    .build())
+                            .collect(Collectors.toList());
+                    solutionPlanDetailRepository.bulkSave(details);
                 }
             });
         }
 
-        if (request.keywords() != null) {
-            request.keywords().forEach(keyword -> solutionKeywordRepository.save(SolutionKeywordEntity.builder()
-                    .keyword(keyword)
-                    .solutionEntity(solutionEntity)
-                    .build()));
+        // Keywords 배치 저장
+        if (request.keywords() != null && !request.keywords().isEmpty()) {
+            List<SolutionKeywordEntity> keywordEntities = request.keywords().stream()
+                    .map(keyword -> SolutionKeywordEntity.builder()
+                            .keyword(keyword)
+                            .solutionEntity(solutionEntity)
+                            .build())
+                    .collect(Collectors.toList());
+            solutionKeywordRepository.bulkSave(keywordEntities);
         }
 
         return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
