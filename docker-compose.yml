@@ -12,9 +12,9 @@ services:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: Asia/Seoul
     ports:
-      - 3306:3306
+      - "3306:3306"
     volumes:
-      - ./db/mysql/data:/var/lib/mysql
+      - mysql_data:/var/lib/mysql
       - ./db/mysql/init:/docker-entrypoint-initdb.d
     networks:
       - docker-bridge
@@ -22,17 +22,17 @@ services:
   redis:
     image: redis:7.2
     container_name: redis
+    restart: always
     environment:
       TZ: Asia/Seoul
     ports:
       - "6379:6379"
     volumes:
-      - ./redis/data:/data
-      - ./redis/conf/redis.conf:/usr/local/conf/redis.conf
+      - redis_data:/data
+      - ./redis/conf/redis.conf:/usr/local/conf/redis.conf:ro
     labels:
       - "name=redis"
       - "mode=standalone"
-    restart: always
     command: [ "redis-server", "/usr/local/conf/redis.conf" ]
     networks:
       - docker-bridge
@@ -50,6 +50,12 @@ services:
       - redis
     networks:
       - docker-bridge
+
+volumes:
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
 
 networks:
   docker-bridge:
