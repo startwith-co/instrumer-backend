@@ -14,7 +14,7 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - mysql_data:/var/lib/mysql
+      - ./db/mysql/data:/var/lib/mysql
       - ./db/mysql/init:/docker-entrypoint-initdb.d
     networks:
       - docker-bridge
@@ -50,10 +50,6 @@ services:
       - redis
     networks:
       - docker-bridge
-
-volumes:
-  mysql_data:
-    driver: local
 
 networks:
   docker-bridge:
