@@ -246,15 +246,10 @@ public class CommonService {
                         "인증번호 저장 중 오류가 발생했습니다."
                 );
             }
-        } catch (MessagingException e) {
-            throw new ServerException(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "이메일 전송 중 오류가 발생했습니다."
-            );
         } catch (Exception e) {
             throw new ServerException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "이메일 인증번호 처리 중 오류가 발생했습니다."
+                    e.getMessage()
             );
         }
 
