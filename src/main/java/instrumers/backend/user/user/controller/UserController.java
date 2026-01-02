@@ -90,7 +90,7 @@ public class UserController {
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
 	}
 
-	@DeleteMapping()
+	@DeleteMapping("/user")
 	@Operation(summary = "사용자 삭제")
 	public ResponseEntity<BaseResponse<String>> delete(HttpServletRequest request) {
 		Long userSeq = (Long)request.getAttribute("userSeq");
