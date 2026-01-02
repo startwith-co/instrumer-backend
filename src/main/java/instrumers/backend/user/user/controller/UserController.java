@@ -2,16 +2,14 @@ package instrumers.backend.user.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import instrumers.backend.base.BaseResponse;
 import instrumers.backend.user.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -63,6 +61,48 @@ public class UserController {
 		Object response = userService.get(userSeq);
 
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+	}
+
+	@PutMapping()
+	@Operation(
+		summary = "사용자 정보 수정",
+		description = """
+			로그인한 사용자의 정보를 수정합니다.
+			
+			userType에 따라 요청 구조가 달라집니다.
+			
+			모든 필드는 선택적이며, 전달된 필드만 업데이트됩니다.
+			
+			VENDOR 요청 예시
+			```json
+			{
+			  "email": "vendor@example.com",
+			  "password": "newPassword123",
+			  "profileImageUrl": "https://cdn.example.com/profile.png",
+			  "businessName": "인스트루머스",
+			  "phone": "010-1234-5678",
+			  "bank": "KB국민은행",
+			  "account": "123456-01-123456"
+			}
+			```
+			
+			CONSUMER 요청 예시
+			```json
+			{
+			  "email": "consumer@example.com",
+			  "password": "newPassword123",
+			  "profileImageUrl": "https://cdn.example.com/profile.png",
+			  "businessName": "테스트컴퍼니",
+			  "phone": "010-9876-5432"
+			}
+			```
+			"""
+	)
+	public ResponseEntity<BaseResponse<String>> update(HttpServletRequest httpServletRequest, @Valid @RequestBody Object request) {
+		Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+		userService.update(userSeq, request);
+
+		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
 	}
 
 	@DeleteMapping()

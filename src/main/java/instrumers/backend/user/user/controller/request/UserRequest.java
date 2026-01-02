@@ -20,13 +20,6 @@ public class UserRequest {
     ) {
     }
 
-    public record SendEmailRequest(
-            @NotBlank(message = "이메일은 필수 입력값입니다.")
-            @Email(message = "올바른 이메일 형식이 아닙니다.")
-            String email
-    ) {
-    }
-
     public record VerifyEmailAuthKeyRequest(
             @NotBlank(message = "이메일은 필수 입력값입니다.")
             @Email(message = "올바른 이메일 형식이 아닙니다.")

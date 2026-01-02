@@ -51,14 +51,12 @@ public class UserPublicController {
 		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
 	}
 
-	@PostMapping(value = "/send-email")
+	@GetMapping(value = "/send-email/{email}")
 	@Operation(summary = "이메일 전송 (유효시간 5분)")
-	public ResponseEntity<BaseResponse<Map<String, String>>> sendEmail(@Valid @RequestBody SendEmailRequest request) {
-		String authCode = commonService.sendAuthCode(request.email());
-		Map<String, String> response = new HashMap<>();
-		response.put("authCode", authCode);
+	public ResponseEntity<BaseResponse<String>> sendEmail(@PathVariable String email) {
+		commonService.sendAuthCode(email);
 
-		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
 	}
 
 	@PostMapping(value = "/auth-code")

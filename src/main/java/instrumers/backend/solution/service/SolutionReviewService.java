@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionReviewRequest.*;
@@ -81,8 +82,7 @@ public class SolutionReviewService {
 		Page<SolutionReviewEntity> reviewPage = solutionReviewRepository.findAllBySolutionEntity(solutionEntity, pageable);
 		List<SolutionReviewEntity> reviews = reviewPage.getContent();
 
-		// N+1 문제 방지: 모든 userEntity를 한 번에 조회
-		java.util.Set<UserEntity> userEntities = reviews.stream()
+		Set<UserEntity> userEntities = reviews.stream()
 			.map(SolutionReviewEntity::getUserEntity)
 			.collect(Collectors.toSet());
 

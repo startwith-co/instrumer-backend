@@ -4,14 +4,17 @@ import instrumers.backend.common.service.CommonService;
 import instrumers.backend.exception.BadRequestException;
 import instrumers.backend.exception.NotFoundException;
 import instrumers.backend.exception.UnauthorizedException;
-import instrumers.backend.user.consumer.controller.response.ConsumerResponse;
+import instrumers.backend.exception.ConflictException;
+import instrumers.backend.exception.ServerException;
 import instrumers.backend.user.consumer.model.ConsumerEntity;
 import instrumers.backend.user.consumer.repository.ConsumerRepository;
+import instrumers.backend.user.consumer.controller.request.ConsumerRequest.UpdateConsumerRequest;
 import instrumers.backend.user.user.model.UserEntity;
 import instrumers.backend.user.user.repository.UserRepository;
-import instrumers.backend.user.vendor.controller.response.VendorResponse;
+import instrumers.backend.user.vendor.controller.request.VendorRequest.UpdateVendorRequest;
 import instrumers.backend.user.vendor.model.VendorEntity;
 import instrumers.backend.user.vendor.repository.VendorRepository;
+import org.springframework.dao.OptimisticLockingFailureException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
@@ -152,4 +155,64 @@ public class UserService {
 		}
 	}
 
+	@Transactional
+	public void update(Long userSeq, Object request) {
+		try {
+			UserEntity userEntity = userRepository.findById(userSeq)
+				.orElseThrow(() -> new NotFoundException(
+					HttpStatus.NOT_FOUND.value(),
+					"존재하지 않는 회원입니다."
+				));
+
+			String encodedPassword = null;
+			String email = null;
+			String profileImageUrl = null;
+
+			if (request instanceof UpdateConsumerRequest consumerRequest) {
+				encodedPassword = consumerRequest.password() != null ? bCryptPasswordEncoder.encode(consumerRequest.password()) : null;
+				email = consumerRequest.email();
+				profileImageUrl = consumerRequest.profileImageUrl();
+				userEntity.update(email, encodedPassword, profileImageUrl);
+				userRepository.save(userEntity);
+
+				ConsumerEntity consumerEntity = consumerRepository.findByUserEntity(userEntity)
+					.orElseThrow(() -> new NotFoundException(
+						HttpStatus.NOT_FOUND.value(),
+						"존재하지 않는 수요 기업 회원입니다."
+					));
+				consumerEntity.update(consumerRequest.businessName(), consumerRequest.phone());
+				consumerRepository.save(consumerEntity);
+
+			} else if (request instanceof UpdateVendorRequest vendorRequest) {
+				encodedPassword = vendorRequest.password() != null ? bCryptPasswordEncoder.encode(vendorRequest.password()) : null;
+				email = vendorRequest.email();
+				profileImageUrl = vendorRequest.profileImageUrl();
+				userEntity.update(email, encodedPassword, profileImageUrl);
+				userRepository.save(userEntity);
+
+				VendorEntity vendorEntity = vendorRepository.findByUserEntity(userEntity)
+					.orElseThrow(() -> new NotFoundException(
+						HttpStatus.NOT_FOUND.value(),
+						"존재하지 않는 기업 회원입니다."
+					));
+				vendorEntity.update(vendorRequest.businessName(), vendorRequest.phone(), vendorRequest.bank(), vendorRequest.account());
+				vendorRepository.save(vendorEntity);
+			} else {
+				throw new BadRequestException(
+					HttpStatus.BAD_REQUEST.value(),
+					"지원하지 않는 요청 타입입니다."
+				);
+			}
+		} catch (OptimisticLockingFailureException e) {
+			throw new ConflictException(
+				HttpStatus.CONFLICT.value(),
+				e.getMessage()
+			);
+		} catch (Exception e) {
+			throw new ServerException(
+				HttpStatus.INTERNAL_SERVER_ERROR.value(),
+				e.getMessage()
+			);
+		}
+	}
 }

@@ -16,11 +16,11 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("/admin/logs")
+@RequestMapping("/api/public")
 public class ExceptionLogController {
     private final ExceptionLogService exceptionLogService;
 
-    @GetMapping()
+    @GetMapping("/admin/logs")
     public String settlement(@RequestParam(defaultValue = "0") int page, @ModelAttribute String errorMessage, Model model) {
         int pageSize = 20;
         int start = page * pageSize;

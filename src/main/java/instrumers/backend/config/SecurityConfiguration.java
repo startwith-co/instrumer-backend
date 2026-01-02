@@ -42,6 +42,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/public/**").permitAll() // 권한 없이 접근 가능한 API
                         .requestMatchers("/api/vendor/**").hasRole("VENDOR") // VENDOR 권한 필요한 API
                         .requestMatchers("/api/consumer/**").hasRole("CONSUMER") // CONSUMER 권한 필요한 API
+                        .requestMatchers("/api/users/**").hasAnyRole("VENDOR", "CONSUMER") // VENDOR 또는 CONSUMER 권한 필요한 API
 
                         .anyRequest().authenticated() // 나머지 API는 인증 필요
                 )
