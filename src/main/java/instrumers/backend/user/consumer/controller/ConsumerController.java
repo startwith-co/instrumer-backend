@@ -30,13 +30,4 @@ public class ConsumerController {
 
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
     }
-
-    @GetMapping
-    @Operation(summary = "수요 고객 정보 조회")
-    public ResponseEntity<BaseResponse<GetConsumerResponse>> get(HttpServletRequest httpServletRequest) {
-        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
-        GetConsumerResponse response = consumerService.get(userSeq);
-
-        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-    }
 }

@@ -30,13 +30,4 @@ public class VendorController {
 
         return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
     }
-
-    @GetMapping
-    @Operation(summary = "벤더 기업 정보 조회")
-    public ResponseEntity<BaseResponse<GetVendorResponse>> get(HttpServletRequest httpServletRequest) {
-        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
-        GetVendorResponse response = vendorService.get(userSeq);
-
-        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-    }
 }
