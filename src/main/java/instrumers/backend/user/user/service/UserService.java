@@ -85,4 +85,14 @@ public class UserService {
 
         return new ReIssueTokenResponse(accessToken, refreshToken);
     }
+
+	public void delete(Long userSeq) {
+		UserEntity userEntity = userRepository.findById(userSeq)
+			.orElseThrow(() -> new NotFoundException(
+				HttpStatus.NOT_FOUND.value(),
+				"존재하지 않는 회원입니다."
+			));
+
+		userRepository.delete(userEntity);
+	}
 }
