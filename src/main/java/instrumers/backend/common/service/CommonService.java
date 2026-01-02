@@ -9,8 +9,10 @@ import instrumers.backend.user.user.util.UserType;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import jakarta.mail.AuthenticationFailedException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -30,6 +32,7 @@ import static instrumers.backend.common.util.CommonUtil.BLACK_KEY_FMT;
 import static instrumers.backend.common.util.CommonUtil.EMAIL_AUTH_KEY_FMT;
 import static instrumers.backend.common.util.CommonUtil.WHITE_KEY_FMT;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommonService {
@@ -228,6 +231,7 @@ public class CommonService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(mimeMessage);
+            log.info("이메일 전송 성공: {}", email);
 
             String redisKey = String.format(EMAIL_AUTH_KEY_FMT, email);
             if (redisTemplate.hasKey(redisKey)) redisTemplate.delete(redisKey);
@@ -241,15 +245,29 @@ public class CommonService {
 
             String savedAuthKey = redisTemplate.opsForValue().get(redisKey);
             if (savedAuthKey == null || !savedAuthKey.equals(authKey)) {
+                log.error("인증번호 Redis 저장 실패: email={}, authKey={}", email, authKey);
                 throw new ServerException(
                         HttpStatus.INTERNAL_SERVER_ERROR.value(),
                         "인증번호 저장 중 오류가 발생했습니다."
                 );
             }
-        } catch (Exception e) {
+        } catch (AuthenticationFailedException e) {
+            log.error("이메일 인증 실패: email={}, error={}", email, e.getMessage(), e);
             throw new ServerException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    e.getMessage()
+                    "이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요."
+            );
+        } catch (MessagingException e) {
+            log.error("이메일 전송 실패: email={}, error={}", email, e.getMessage(), e);
+            throw new ServerException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "이메일 전송 중 오류가 발생했습니다: " + e.getMessage()
+            );
+        } catch (Exception e) {
+            log.error("이메일 처리 중 예상치 못한 오류: email={}, error={}", email, e.getMessage(), e);
+            throw new ServerException(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "이메일 인증번호 처리 중 오류가 발생했습니다: " + e.getMessage()
             );
         }
 
