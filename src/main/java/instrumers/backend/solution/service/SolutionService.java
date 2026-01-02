@@ -74,7 +74,7 @@ public class SolutionService {
                         .solutionEntity(solutionEntity)
                         .build())
                 .collect(Collectors.toList());
-        solutionImageRepository.bulkSave(imageEntities);
+        solutionImageRepository.saveAll(imageEntities);
 
         if (request.plans() != null) {
             request.plans().forEach(plan -> {
@@ -94,7 +94,7 @@ public class SolutionService {
                                     .solutionPlanEntity(solutionPlanEntity)
                                     .build())
                             .collect(Collectors.toList());
-                    solutionPlanDetailRepository.bulkSave(details);
+                    solutionPlanDetailRepository.saveAll(details);
                 }
             });
         }
@@ -107,7 +107,7 @@ public class SolutionService {
                             .solutionEntity(solutionEntity)
                             .build())
                     .collect(Collectors.toList());
-            solutionKeywordRepository.bulkSave(keywordEntities);
+            solutionKeywordRepository.saveAll(keywordEntities);
         }
 
         return new CreateSolutionResponse(solutionEntity.getSolutionSeq());

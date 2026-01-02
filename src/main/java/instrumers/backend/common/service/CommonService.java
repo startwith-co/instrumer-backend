@@ -305,13 +305,12 @@ public class CommonService {
         try {
             Date expirationDate = new Date();
             long expTimeMillis = expirationDate.getTime();
-            expTimeMillis += 1000L * 60 * expiration; // 분을 밀리초로 변환
+            expTimeMillis += 1000L * 60 * expiration;
             expirationDate.setTime(expTimeMillis);
 
             GeneratePresignedUrlRequest generatePresignedUrlRequest =
                     new GeneratePresignedUrlRequest(bucketName, fileName)
-                            // .withMethod(HttpMethod)
-                            .withMethod(HttpMethod.PUT)
+                            .withMethod(httpMethod)
                             .withExpiration(expirationDate);
 
             URL url = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);

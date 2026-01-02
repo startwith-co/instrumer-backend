@@ -40,7 +40,7 @@ public class UserService {
 	public LoginUserResponse Login(LoginUserRequest request) {
 		UserEntity userEntity = userRepository.findByEmail(request.email())
 			.orElseThrow(() -> new NotFoundException(
-				HttpStatus.CONFLICT.value(),
+				HttpStatus.NOT_FOUND.value(),
 				"존재하지 않는 이메일입니다."
 			));
 
