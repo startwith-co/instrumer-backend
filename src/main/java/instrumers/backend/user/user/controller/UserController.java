@@ -21,7 +21,7 @@ public class UserController {
 
 	@GetMapping()
 	@Operation(
-		summary = "사용자 조회",
+		summary = "사용자(본인) 정보 조회",
 		description = """
 			로그인한 사용자의 정보를 조회합니다.
 			
