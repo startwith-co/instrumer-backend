@@ -12,10 +12,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SolutionReviewRepository extends JpaRepository<SolutionReviewEntity, Long>, SolutionReviewRepositoryCustom {
-    @EntityGraph(attributePaths = {"userEntity"})
     @Query("""
             SELECT sr
             FROM SolutionReviewEntity sr
+            JOIN FETCH sr.userEntity
             WHERE sr.solutionEntity = :solutionEntity AND sr.deleted = false
             ORDER BY sr.createdAt DESC
             """)
