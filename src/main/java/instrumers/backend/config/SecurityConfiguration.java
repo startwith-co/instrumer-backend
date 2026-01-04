@@ -43,6 +43,7 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/vendor/**").hasRole("VENDOR") // VENDOR 권한 필요한 API
                         .requestMatchers("/api/consumer/**").hasRole("CONSUMER") // CONSUMER 권한 필요한 API
                         .requestMatchers("/api/users/**").hasAnyRole("VENDOR", "CONSUMER") // VENDOR 또는 CONSUMER 권한 필요한 API
+                        .requestMatchers("/admin/logs/**").hasAnyRole("VENDOR", "CONSUMER") // ADMIN 로그 페이지는 인증 필요
 
                         .anyRequest().authenticated() // 나머지 API는 인증 필요
                 )
