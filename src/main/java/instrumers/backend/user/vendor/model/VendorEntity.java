@@ -30,7 +30,7 @@ public class VendorEntity extends BaseTimeEntity {
     @Column(name = "phone", nullable = false, unique = false)
     private String phone;
 
-    @Column(name = "business_image_url", nullable = false, unique = false)
+    @Column(name = "business_image_url", nullable = false, unique = false, length = 1024)
     private String businessImageUrl;
 
     @Column(name = "bank", nullable = true, unique = false)

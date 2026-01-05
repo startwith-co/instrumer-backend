@@ -2,7 +2,6 @@ package instrumers.backend.log.service;
 
 import instrumers.backend.log.dto.ExceptionLogDto;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +18,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ExceptionLogService {
@@ -61,7 +59,6 @@ public class ExceptionLogService {
             Path logFile = Files.exists(errorLogPath) ? errorLogPath : mainLogPath;
             
             if (!Files.exists(logFile)) {
-                log.warn("로그 파일을 찾을 수 없습니다: {}", logFile);
                 return Collections.emptyList();
             }
 
@@ -89,7 +86,6 @@ public class ExceptionLogService {
             return errorLogs.subList(fromIndex, toIndex);
 
         } catch (IOException e) {
-            log.error("로그 파일 읽기 실패", e);
             return Collections.emptyList();
         }
     }
@@ -138,7 +134,7 @@ public class ExceptionLogService {
             try {
                 createdAt = LocalDateTime.parse(dateTimeStr, DATE_TIME_FORMATTER);
             } catch (DateTimeParseException e) {
-                log.warn("날짜 파싱 실패: {}", dateTimeStr);
+                // 날짜 파싱 실패 시 무시
             }
 
             // GlobalExceptionHandler의 로그 형식에 맞게 파싱
@@ -162,7 +158,6 @@ public class ExceptionLogService {
             );
 
         } catch (Exception e) {
-            log.warn("로그 라인 파싱 실패: {}", logLine, e);
             return null;
         }
     }

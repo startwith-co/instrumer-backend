@@ -36,7 +36,7 @@ public class UserEntity extends BaseTimeEntity {
     @Column(name = "user_type", nullable = false, unique = false)
     private UserType userType;
 
-    @Column(name = "profile_image_url", nullable = true, unique = false)
+    @Column(name = "profile_image_url", nullable = true, unique = false, length = 1024)
     private String profileImageUrl;
 
     @Builder.Default

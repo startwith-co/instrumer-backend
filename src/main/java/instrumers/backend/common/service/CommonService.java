@@ -12,7 +12,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.mail.AuthenticationFailedException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
@@ -23,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -32,7 +30,6 @@ import static instrumers.backend.common.util.CommonUtil.BLACK_KEY_FMT;
 import static instrumers.backend.common.util.CommonUtil.EMAIL_AUTH_KEY_FMT;
 import static instrumers.backend.common.util.CommonUtil.WHITE_KEY_FMT;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommonService {
@@ -231,7 +228,6 @@ public class CommonService {
             helper.setText(htmlContent, true);
 
             javaMailSender.send(mimeMessage);
-            log.info("이메일 전송 성공: {}", email);
 
             String redisKey = String.format(EMAIL_AUTH_KEY_FMT, email);
             if (redisTemplate.hasKey(redisKey)) redisTemplate.delete(redisKey);
@@ -245,26 +241,22 @@ public class CommonService {
 
             String savedAuthKey = redisTemplate.opsForValue().get(redisKey);
             if (savedAuthKey == null || !savedAuthKey.equals(authKey)) {
-                log.error("인증번호 Redis 저장 실패: email={}, authKey={}", email, authKey);
                 throw new ServerException(
                         HttpStatus.INTERNAL_SERVER_ERROR.value(),
                         "인증번호 저장 중 오류가 발생했습니다."
                 );
             }
         } catch (AuthenticationFailedException e) {
-            log.error("이메일 인증 실패: email={}, error={}", email, e.getMessage(), e);
             throw new ServerException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요."
             );
         } catch (MessagingException e) {
-            log.error("이메일 전송 실패: email={}, error={}", email, e.getMessage(), e);
             throw new ServerException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "이메일 전송 중 오류가 발생했습니다: " + e.getMessage()
             );
         } catch (Exception e) {
-            log.error("이메일 처리 중 예상치 못한 오류: email={}, error={}", email, e.getMessage(), e);
             throw new ServerException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
                     "이메일 인증번호 처리 중 오류가 발생했습니다: " + e.getMessage()
@@ -307,27 +299,31 @@ public class CommonService {
 
     /**
      * S3 Presigned URL을 생성합니다.
+     * 파일명은 UUID로 자동 생성되고, HTTP 메서드는 PUT(업로드용)으로 설정됩니다.
+     * 만료 시간은 1시간(60분)으로 고정됩니다.
      *
-     * @param fileName   S3에 저장될 파일명
-     * @param httpMethod HTTP 메서드 (PUT: 업로드, GET: 다운로드)
-     * @param expiration 만료 시간 (분 단위)
-     * @return 생성된 Presigned URL
+     * @return 생성된 Presigned URL (S3에서 생성하는 URL 형식, 커스터마이징 불가)
      * @throws ServerException Presigned URL 생성 실패 시
      */
-    public String generatePresignedUrl(String fileName, HttpMethod httpMethod, int expiration) {
+    public String generatePresignedUrl() {
+        String fileName = UUID.randomUUID().toString();
+        HttpMethod httpMethod = HttpMethod.PUT; // 기본값: 업로드용
+
         try {
+            // 만료 시간: 1시간(60분) 고정
+            int expirationMinutes = 60;
+
             Date expirationDate = new Date();
             long expTimeMillis = expirationDate.getTime();
-            expTimeMillis += 1000L * 60 * expiration;
+            expTimeMillis += 1000L * 60 * expirationMinutes;
             expirationDate.setTime(expTimeMillis);
 
-            GeneratePresignedUrlRequest generatePresignedUrlRequest =
-                    new GeneratePresignedUrlRequest(bucketName, fileName)
-                            .withMethod(httpMethod)
-                            .withExpiration(expirationDate);
+            GeneratePresignedUrlRequest generatePresignedUrlRequest
+                    = new GeneratePresignedUrlRequest(bucketName, fileName)
+                    .withMethod(httpMethod)
+                    .withExpiration(expirationDate);
 
-            URL url = amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest);
-            return url.toString();
+            return amazonS3Client.generatePresignedUrl(generatePresignedUrlRequest).toString();
         } catch (Exception e) {
             throw new ServerException(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),

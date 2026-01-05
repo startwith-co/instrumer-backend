@@ -19,7 +19,7 @@ public class SolutionImageEntity extends BaseTimeEntity {
     @Column(name = "solution_image_seq")
     private Long solutionImageSeq;
 
-    @Column(name = "solution_image_url", nullable = false, unique = false)
+    @Column(name = "solution_image_url", nullable = false, unique = false, length = 1024)
     private String imageUrl;
 
     @Column(name = "image_type", nullable = false, unique = false)
