@@ -19,27 +19,18 @@ import static instrumers.backend.solution.controller.response.SolutionReviewResp
 @RequestMapping("/api/consumer/solutions")
 @Tag(name = "솔루션 리뷰 API (Consumer)")
 public class SolutionConsumerController {
-
     private final SolutionReviewService reviewService;
 
-    /**
-     * 솔루션 리뷰 작성
-     * - CONSUMER 권한 필요
-     * - 특정 솔루션에 대한 후기 작성
-     */
     @PostMapping("/{solutionSeq}/reviews")
     @Operation(summary = "솔루션 리뷰 작성")
-    public ResponseEntity<BaseResponse<CreateSolutionReviewResponse>> createReview(
-            HttpServletRequest request,
+    public ResponseEntity<BaseResponse<CreateSolutionReviewResponse>> createSolutionReview(
+            HttpServletRequest httpServletRequest,
             @PathVariable Long solutionSeq,
-            @Valid @RequestBody CreateSolutionReviewRequest dto) {
+            @Valid @RequestBody CreateSolutionReviewRequest request
+    ) {
+        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+        CreateSolutionReviewResponse response = reviewService.create(userSeq, solutionSeq, request);
 
-        Long userSeq = (Long) request.getAttribute("userSeq");
-
-        CreateSolutionReviewRequest requestWithPathSeq = new CreateSolutionReviewRequest(solutionSeq, dto.context(), dto.rate());
-        CreateSolutionReviewResponse response = reviewService.create(userSeq, requestWithPathSeq);
-
-        return ResponseEntity.ok()
-                .body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
     }
 }

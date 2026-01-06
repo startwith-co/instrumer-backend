@@ -16,6 +16,7 @@ public class SolutionResponse {
             String explanation,
             String category,
             Long price,
+            String webUrl,
             List<GetSolutionImageRequest> images,
             List<GetSolutionPlanRequest> plans,
             Long reviewCnt,

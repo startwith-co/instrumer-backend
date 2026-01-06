@@ -41,13 +41,13 @@ public class SolutionReviewService {
 	private final VendorRepository vendorRepository;
 
 	@Transactional
-	public CreateSolutionReviewResponse create(Long userSeq, CreateSolutionReviewRequest request) {
+	public CreateSolutionReviewResponse create(Long userSeq, Long solutionSeq, CreateSolutionReviewRequest request) {
 		UserEntity userEntity = userRepository.findByUserSeqLock(userSeq)
 			.orElseThrow(() -> new NotFoundException(
 				HttpStatus.NOT_FOUND.value(),
 				"존재하지 않는 회원입니다."
 			));
-		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(request.solutionSeq())
+		SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
 			.orElseThrow(() -> new NotFoundException(
 				HttpStatus.NOT_FOUND.value(),
 				"존재하지 않는 솔루션입니다."

@@ -199,6 +199,7 @@ public class SolutionService {
                 solutionEntity.getExplanation(),
                 solutionEntity.getCategory(),
                 solutionEntity.getPrice(),
+                solutionEntity.getWebUrl(),
                 images.stream()
                         .map(image -> new GetSolutionImageRequest(image.getImageUrl(), image.getImageType()))
                         .toList(),
