@@ -18,9 +18,12 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
 
 import java.util.List;
 import java.util.Map;
@@ -39,37 +42,61 @@ public class SolutionReviewService {
     private final SolutionReviewRepository solutionReviewRepository;
     private final ConsumerRepository consumerRepository;
     private final VendorRepository vendorRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private static final String CREATE_REVIEW_LOCK_KEY_FMT = "lock:create:review:%s:%s";
+    private static final long LOCK_TIMEOUT_SECONDS = 10;
 
     @Transactional
     public CreateSolutionReviewResponse create(Long userSeq, Long solutionSeq, CreateSolutionReviewRequest request) {
-        UserEntity userEntity = userRepository.findByUserSeqLock(userSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 회원입니다."
-                ));
-        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 솔루션입니다."
-                ));
+        // Redis 분산 락 획득 시도 (동일 사용자가 동일 솔루션에 중복 리뷰 작성 방지)
+        String lockKey = String.format(CREATE_REVIEW_LOCK_KEY_FMT, userSeq, solutionSeq);
+        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(
+                lockKey,
+                "locked",
+                Duration.ofSeconds(LOCK_TIMEOUT_SECONDS)
+        );
 
-        if (request.context().length() > 240) {
+        if (!Boolean.TRUE.equals(lockAcquired)) {
             throw new BadRequestException(
                     HttpStatus.BAD_REQUEST.value(),
-                    "리뷰 글자수는 240자가 최대입니다."
+                    "이미 처리 중인 요청입니다. 잠시 후 다시 시도해주세요."
             );
         }
 
-        SolutionReviewEntity solutionReviewEntity = solutionReviewRepository.save(
-                SolutionReviewEntity.builder()
-                        .context(request.context())
-                        .rate(request.rate())
-                        .solutionEntity(solutionEntity)
-                        .userEntity(userEntity)
-                        .build()
-        );
+        try {
+            UserEntity userEntity = userRepository.findById(userSeq)
+                    .orElseThrow(() -> new NotFoundException(
+                            HttpStatus.NOT_FOUND.value(),
+                            "존재하지 않는 회원입니다."
+                    ));
+            SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
+                    .orElseThrow(() -> new NotFoundException(
+                            HttpStatus.NOT_FOUND.value(),
+                            "존재하지 않는 솔루션입니다."
+                    ));
 
-        return new CreateSolutionReviewResponse(solutionReviewEntity.getSolutionReviewSeq());
+            if (request.context().length() > 240) {
+                throw new BadRequestException(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "리뷰 글자수는 240자가 최대입니다."
+                );
+            }
+
+            SolutionReviewEntity solutionReviewEntity = solutionReviewRepository.save(
+                    SolutionReviewEntity.builder()
+                            .context(request.context())
+                            .rate(request.rate())
+                            .solutionEntity(solutionEntity)
+                            .userEntity(userEntity)
+                            .build()
+            );
+
+            return new CreateSolutionReviewResponse(solutionReviewEntity.getSolutionReviewSeq());
+        } finally {
+            // 락 해제 (성공/실패 관계없이)
+            redisTemplate.delete(lockKey);
+        }
     }
 
     @Transactional(readOnly = true)

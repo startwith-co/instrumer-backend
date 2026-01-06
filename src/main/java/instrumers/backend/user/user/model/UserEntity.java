@@ -26,7 +26,7 @@ public class UserEntity extends BaseTimeEntity {
     @Column(name = "user_seq")
     private Long userSeq;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = false)
     private String email;
 
     @Column(name = "password", nullable = false, unique = false)

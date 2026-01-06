@@ -14,9 +14,12 @@ import instrumers.backend.user.vendor.model.VendorEntity;
 import instrumers.backend.user.vendor.repository.VendorRepository;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Duration;
 
 import instrumers.backend.common.dto.PageInfo;
 import org.springframework.data.domain.Page;
@@ -43,6 +46,10 @@ public class SolutionService {
     private final SolutionKeywordRepository solutionKeywordRepository;
     private final VendorRepository vendorRepository;
     private final SolutionReviewRepository solutionReviewRepository;
+    private final RedisTemplate<String, String> redisTemplate;
+
+    private static final String CREATE_SOLUTION_LOCK_KEY_FMT = "lock:create:solution:%s";
+    private static final long LOCK_TIMEOUT_SECONDS = 10;
 
     @Transactional
     public CreateSolutionResponse create(Long userSeq, CreateSolutionRequest request) {
@@ -53,66 +60,86 @@ public class SolutionService {
             );
         }
 
-        UserEntity userEntity = userRepository.findByUserSeqLock(userSeq)
-                .orElseThrow(() -> new NotFoundException(
-                        HttpStatus.NOT_FOUND.value(),
-                        "존재하지 않는 회원입니다."
-                ));
+        // Redis 분산 락 획득 시도
+        String lockKey = String.format(CREATE_SOLUTION_LOCK_KEY_FMT, userSeq);
+        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(
+                lockKey,
+                "locked",
+                Duration.ofSeconds(LOCK_TIMEOUT_SECONDS)
+        );
 
-        SolutionEntity solutionEntity = solutionRepository.save(SolutionEntity.builder()
-                .name(request.name())
-                .explanation(request.explanation())
-                .category(request.category())
-                .price(request.price())
-                .webUrl(request.webUrl())
-                .userEntity(userEntity)
-                .build());
-
-        // Images 배치 저장
-        List<SolutionImageEntity> imageEntities = request.images().stream()
-                .map(image -> SolutionImageEntity.builder()
-                        .imageUrl(image.imageUrl())
-                        .imageType(image.imageType())
-                        .solutionEntity(solutionEntity)
-                        .build())
-                .collect(Collectors.toList());
-        solutionImageRepository.saveAll(imageEntities);
-
-        if (request.plans() != null) {
-            request.plans().forEach(plan -> {
-                SolutionPlanEntity solutionPlanEntity = solutionPlanRepository.save(SolutionPlanEntity.builder()
-                        .name(plan.name())
-                        .subName(plan.subName())
-                        .price(plan.price())
-                        .planType(plan.planType())
-                        .solutionEntity(solutionEntity)
-                        .build());
-
-                if (plan.details() != null && !plan.details().isEmpty()) {
-                    List<SolutionPlanDetailEntity> details = plan.details().stream()
-                            .map(detail -> SolutionPlanDetailEntity.builder()
-                                    .name(detail.name())
-                                    .context(detail.context())
-                                    .solutionPlanEntity(solutionPlanEntity)
-                                    .build())
-                            .collect(Collectors.toList());
-                    solutionPlanDetailRepository.saveAll(details);
-                }
-            });
+        if (!Boolean.TRUE.equals(lockAcquired)) {
+            throw new BadRequestException(
+                    HttpStatus.BAD_REQUEST.value(),
+                    "이미 처리 중인 요청입니다. 잠시 후 다시 시도해주세요."
+            );
         }
 
-        // Keywords 배치 저장
-        if (request.keywords() != null && !request.keywords().isEmpty()) {
-            List<SolutionKeywordEntity> keywordEntities = request.keywords().stream()
-                    .map(keyword -> SolutionKeywordEntity.builder()
-                            .keyword(keyword)
+        try {
+            UserEntity userEntity = userRepository.findById(userSeq)
+                    .orElseThrow(() -> new NotFoundException(
+                            HttpStatus.NOT_FOUND.value(),
+                            "존재하지 않는 회원입니다."
+                    ));
+
+            SolutionEntity solutionEntity = solutionRepository.save(SolutionEntity.builder()
+                    .name(request.name())
+                    .explanation(request.explanation())
+                    .category(request.category())
+                    .price(request.price())
+                    .webUrl(request.webUrl())
+                    .userEntity(userEntity)
+                    .build());
+
+            // Images 배치 저장
+            List<SolutionImageEntity> imageEntities = request.images().stream()
+                    .map(image -> SolutionImageEntity.builder()
+                            .imageUrl(image.imageUrl())
+                            .imageType(image.imageType())
                             .solutionEntity(solutionEntity)
                             .build())
                     .collect(Collectors.toList());
-            solutionKeywordRepository.saveAll(keywordEntities);
-        }
+            solutionImageRepository.saveAll(imageEntities);
 
-        return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
+            if (request.plans() != null) {
+                request.plans().forEach(plan -> {
+                    SolutionPlanEntity solutionPlanEntity = solutionPlanRepository.save(SolutionPlanEntity.builder()
+                            .name(plan.name())
+                            .subName(plan.subName())
+                            .price(plan.price())
+                            .planType(plan.planType())
+                            .solutionEntity(solutionEntity)
+                            .build());
+
+                    if (plan.details() != null && !plan.details().isEmpty()) {
+                        List<SolutionPlanDetailEntity> details = plan.details().stream()
+                                .map(detail -> SolutionPlanDetailEntity.builder()
+                                        .name(detail.name())
+                                        .context(detail.context())
+                                        .solutionPlanEntity(solutionPlanEntity)
+                                        .build())
+                                .collect(Collectors.toList());
+                        solutionPlanDetailRepository.saveAll(details);
+                    }
+                });
+            }
+
+            // Keywords 배치 저장
+            if (request.keywords() != null && !request.keywords().isEmpty()) {
+                List<SolutionKeywordEntity> keywordEntities = request.keywords().stream()
+                        .map(keyword -> SolutionKeywordEntity.builder()
+                                .keyword(keyword)
+                                .solutionEntity(solutionEntity)
+                                .build())
+                        .collect(Collectors.toList());
+                solutionKeywordRepository.saveAll(keywordEntities);
+            }
+
+            return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
+        } finally {
+            // 락 해제 (성공/실패 관계없이)
+            redisTemplate.delete(lockKey);
+        }
     }
 
     @Transactional
