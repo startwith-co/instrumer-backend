@@ -201,6 +201,7 @@ public class SolutionService {
                         .toList(),
                 plans.stream()
                         .map(plan -> new GetSolutionPlanRequest(
+                                plan.getSolutionPlanSeq(),
                                 plan.getName(),
                                 plan.getSubName(),
                                 plan.getPrice(),

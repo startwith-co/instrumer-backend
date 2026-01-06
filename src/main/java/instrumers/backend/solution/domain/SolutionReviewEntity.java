@@ -17,7 +17,7 @@ import org.hibernate.annotations.Where;
 @NoArgsConstructor
 @Getter
 @SuperBuilder
-@SQLDelete(sql = "UPDATE SOLUTION_REVIEW SET deleted = true WHERE solution_review_seq = ? AND version = ?")
+@SQLDelete(sql = "UPDATE solution_review SET deleted = true WHERE solution_review_seq = ? AND version = ?")
 @Where(clause = "deleted = false")
 public class SolutionReviewEntity extends BaseTimeEntity {
     @Id

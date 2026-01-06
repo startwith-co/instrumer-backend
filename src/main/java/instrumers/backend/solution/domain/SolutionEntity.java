@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @SuperBuilder
-@SQLDelete(sql = "UPDATE SOLUTION SET deleted = true WHERE solution_seq = ? AND version = ?")
+@SQLDelete(sql = "UPDATE solution SET deleted = true WHERE solution_seq = ? AND version = ?")
 @Where(clause = "deleted = false")
 public class SolutionEntity extends BaseTimeEntity {
     @Id
@@ -38,6 +38,9 @@ public class SolutionEntity extends BaseTimeEntity {
 
     @Column(name = "price", nullable = false, unique = false)
     private Long price;
+
+    @Column(name = "web_url", nullable = false, unique = false, length = 1024)
+    private String web_url;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_seq", nullable = false)

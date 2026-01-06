@@ -31,6 +31,7 @@ public class SolutionResponse {
         }
 
         public record GetSolutionPlanRequest(
+                Long solutionPlanSeq,
                 String name,
                 String subName,
                 Long price,
