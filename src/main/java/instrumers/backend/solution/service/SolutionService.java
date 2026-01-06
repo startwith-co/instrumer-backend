@@ -64,6 +64,7 @@ public class SolutionService {
                 .explanation(request.explanation())
                 .category(request.category())
                 .price(request.price())
+                .webUrl(request.webUrl())
                 .userEntity(userEntity)
                 .build());
 

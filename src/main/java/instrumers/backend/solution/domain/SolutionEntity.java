@@ -40,7 +40,7 @@ public class SolutionEntity extends BaseTimeEntity {
     private Long price;
 
     @Column(name = "web_url", nullable = false, unique = false, length = 1024)
-    private String web_url;
+    private String webUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_seq", nullable = false)
