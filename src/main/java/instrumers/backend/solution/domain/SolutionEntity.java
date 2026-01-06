@@ -19,7 +19,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @Getter
 @SuperBuilder
-@SQLDelete(sql = "UPDATE SOLUTION SET deleted = true WHERE solution_seq = ?")
+@SQLDelete(sql = "UPDATE SOLUTION SET deleted = true WHERE solution_seq = ? AND version = ?")
 @Where(clause = "deleted = false")
 public class SolutionEntity extends BaseTimeEntity {
     @Id
