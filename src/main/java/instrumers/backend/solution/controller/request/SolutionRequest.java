@@ -19,6 +19,9 @@ public class SolutionRequest {
             @NotNull(message = "솔루션 대표 가격은 필수 입력값입니다.")
             Long price,
 
+            @NotBlank(message = "솔루션 웹사이트 링크는 필수 입력값입니다.")
+            String webUrl,
+
             List<CreateSolutionImageRequest> images,
             List<CreateSolutionPlanRequest> plans,
             List<String> keywords
@@ -60,6 +63,9 @@ public class SolutionRequest {
 
             @NotNull(message = "솔루션 대표 가격은 필수 입력값입니다.")
             Long price,
+
+            @NotBlank(message = "솔루션 웹사이트 링크는 필수 입력값입니다.")
+            String webUrl,
 
             List<UpdateSolutionImageRequest> images,
             List<UpdateSolutionPlanRequest> plans,

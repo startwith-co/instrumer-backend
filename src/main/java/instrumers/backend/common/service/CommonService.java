@@ -14,6 +14,7 @@ import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -21,8 +22,11 @@ import jakarta.mail.MessagingException;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +47,7 @@ public class CommonService {
     private String bucketName;
 
     private final RedisTemplate<String, String> redisTemplate;
+    private final ReactiveStringRedisTemplate reactiveStringRedisTemplate;
     private final TemplateEngine templateEngine;
     private final JavaMailSender javaMailSender;
     private final AmazonS3Client amazonS3Client;
@@ -206,65 +211,71 @@ public class CommonService {
     }
 
     /**
-     * 이메일 인증번호를 생성하고 전송한 후 Redis에 저장합니다.
+     * 이메일 인증번호를 생성하고 Redis에 저장한 후 전송합니다.
      *
      * @param email 인증번호를 전송할 이메일 주소
-     * @return 생성된 인증번호 (6자리 숫자)
+     * @return 비동기 처리 완료를 나타내는 Mono<Void>
      */
-    public String sendAuthCode(String email) {
-        Random random = new Random();
-        String authKey = String.valueOf(random.nextInt(888888) + 111111);
+    public Mono<Void> sendAuthCode(String email) {
+        String authKey = String.valueOf(new Random().nextInt(888_888) + 111_111);
         String subject = "Instrumer 이메일 인증번호";
-        Context context = new Context();
-        context.setVariable("authKey", authKey);
-        String htmlContent = templateEngine.process("email-template", context);
+        String redisKey = String.format(EMAIL_AUTH_KEY_FMT, email);
 
-        try {
-            MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, StandardCharsets.UTF_8.name());
-
-            helper.setTo(email);
-            helper.setSubject(subject);
-            helper.setText(htmlContent, true);
-
-            javaMailSender.send(mimeMessage);
-
-            String redisKey = String.format(EMAIL_AUTH_KEY_FMT, email);
-            if (redisTemplate.hasKey(redisKey)) redisTemplate.delete(redisKey);
-
-            redisTemplate.opsForValue().set(
-                    redisKey,
-                    authKey,
-                    5,
-                    TimeUnit.MINUTES
-            );
-
-            String savedAuthKey = redisTemplate.opsForValue().get(redisKey);
-            if (savedAuthKey == null || !savedAuthKey.equals(authKey)) {
-                throw new ServerException(
-                        HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "인증번호 저장 중 오류가 발생했습니다."
+        Mono<Void> saveRedisMono = reactiveStringRedisTemplate.opsForValue()
+                .set(redisKey, authKey, Duration.ofMinutes(5))
+                .flatMap(saved -> Boolean.TRUE.equals(saved)
+                                ? Mono.<Void>empty()
+                                : Mono.error(new ServerException(
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "인증번호 저장에 실패했습니다."
+                        ))
                 );
-            }
-        } catch (AuthenticationFailedException e) {
-            throw new ServerException(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요."
-            );
-        } catch (MessagingException e) {
-            throw new ServerException(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "이메일 전송 중 오류가 발생했습니다: " + e.getMessage()
-            );
-        } catch (Exception e) {
-            throw new ServerException(
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    "이메일 인증번호 처리 중 오류가 발생했습니다: " + e.getMessage()
-            );
-        }
 
-        return authKey;
+        Mono<Void> sendEmailMono = Mono.fromCallable(() -> {
+                    // 템플릿 처리
+                    Context context = new Context();
+                    context.setVariable("authKey", authKey);
+                    String htmlContent = templateEngine.process("email-template", context);
+
+                    MimeMessage mimeMessage = javaMailSender.createMimeMessage();
+                    MimeMessageHelper helper = new MimeMessageHelper(
+                            mimeMessage,
+                            true,
+                            StandardCharsets.UTF_8.name()
+                    );
+
+                    helper.setTo(email);
+                    helper.setSubject(subject);
+                    helper.setText(htmlContent, true);
+
+                    javaMailSender.send(mimeMessage);
+                    return (Void) null;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .then();
+
+        return saveRedisMono
+                .then(sendEmailMono)
+                .onErrorResume(e ->
+                        reactiveStringRedisTemplate.delete(redisKey).then(Mono.error(e))
+                )
+                .onErrorMap(e -> {
+                    if (e instanceof ServerException) {
+                        return e;
+                    }
+                    if (e instanceof AuthenticationFailedException) {
+                        return new ServerException(
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                "이메일 인증에 실패했습니다. SMTP 설정을 확인해주세요."
+                        );
+                    }
+                    return new ServerException(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                            "이메일 인증번호 처리 중 오류가 발생했습니다: " + e.getMessage()
+                    );
+                });
     }
+
 
     /**
      * 이메일과 인증번호를 검증합니다.

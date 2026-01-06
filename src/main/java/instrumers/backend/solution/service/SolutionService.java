@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionRequest.*;
+import static instrumers.backend.solution.controller.request.SolutionRequest.CreateSolutionRequest.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionListResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionResponse.*;
@@ -135,20 +136,21 @@ public class SolutionService {
                 request.explanation(),
                 request.category(),
                 request.price(),
+                request.webUrl(),
                 request.images() != null ? request.images().stream()
-                        .map(image -> new CreateSolutionRequest.CreateSolutionImageRequest(
+                        .map(image -> new CreateSolutionImageRequest(
                                 image.imageUrl(),
                                 image.imageType()
                         ))
                         .toList() : null,
                 request.plans() != null ? request.plans().stream()
-                        .map(plan -> new CreateSolutionRequest.CreateSolutionPlanRequest(
+                        .map(plan -> new CreateSolutionPlanRequest(
                                 plan.name(),
                                 plan.subName(),
                                 plan.price(),
                                 plan.planType(),
                                 plan.details() != null ? plan.details().stream()
-                                        .map(detail -> new CreateSolutionRequest.CreateSolutionPlanDetailRequest(
+                                        .map(detail -> new CreateSolutionPlanDetailRequest(
                                                 detail.name(),
                                                 detail.context()
                                         ))
