@@ -1,5 +1,6 @@
 package instrumers.backend.user.user.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import instrumers.backend.common.service.CommonService;
 import instrumers.backend.exception.BadRequestException;
 import instrumers.backend.exception.NotFoundException;
@@ -11,6 +12,7 @@ import instrumers.backend.user.consumer.repository.ConsumerRepository;
 import instrumers.backend.user.consumer.controller.request.ConsumerRequest.UpdateConsumerRequest;
 import instrumers.backend.user.user.model.UserEntity;
 import instrumers.backend.user.user.repository.UserRepository;
+import instrumers.backend.user.user.util.UserType;
 import instrumers.backend.user.vendor.controller.request.VendorRequest.UpdateVendorRequest;
 import instrumers.backend.user.vendor.model.VendorEntity;
 import instrumers.backend.user.vendor.repository.VendorRepository;
@@ -34,6 +36,7 @@ public class UserService {
 	private final VendorRepository vendorRepository;
 	private final ConsumerRepository consumerRepository;
 	private final CommonService commonService;
+	private final ObjectMapper objectMapper;
 
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
@@ -158,6 +161,7 @@ public class UserService {
 	@Transactional
 	public void update(Long userSeq, Object request) {
 		try {
+			// userType 확인
 			UserEntity userEntity = userRepository.findById(userSeq)
 				.orElseThrow(() -> new NotFoundException(
 					HttpStatus.NOT_FOUND.value(),
@@ -168,7 +172,25 @@ public class UserService {
 			String email = null;
 			String profileImageUrl = null;
 
-			if (request instanceof UpdateConsumerRequest consumerRequest) {
+			// userType에 따라 적절한 Request 타입으로 변환하여 처리
+			if (userEntity.getUserType() == UserType.VENDOR) {
+				UpdateVendorRequest vendorRequest = objectMapper.convertValue(request, UpdateVendorRequest.class);
+				encodedPassword = vendorRequest.password() != null ? bCryptPasswordEncoder.encode(vendorRequest.password()) : null;
+				email = vendorRequest.email();
+				profileImageUrl = vendorRequest.profileImageUrl();
+				userEntity.update(email, encodedPassword, profileImageUrl);
+				userRepository.save(userEntity);
+
+				VendorEntity vendorEntity = vendorRepository.findByUserEntity(userEntity)
+					.orElseThrow(() -> new NotFoundException(
+						HttpStatus.NOT_FOUND.value(),
+						"존재하지 않는 기업 회원입니다."
+					));
+				vendorEntity.update(vendorRequest.businessName(), vendorRequest.phone(), vendorRequest.bank(), vendorRequest.account());
+				vendorRepository.save(vendorEntity);
+
+			} else if (userEntity.getUserType() == UserType.CONSUMER) {
+				UpdateConsumerRequest consumerRequest = objectMapper.convertValue(request, UpdateConsumerRequest.class);
 				encodedPassword = consumerRequest.password() != null ? bCryptPasswordEncoder.encode(consumerRequest.password()) : null;
 				email = consumerRequest.email();
 				profileImageUrl = consumerRequest.profileImageUrl();
@@ -183,26 +205,17 @@ public class UserService {
 				consumerEntity.update(consumerRequest.businessName(), consumerRequest.phone());
 				consumerRepository.save(consumerEntity);
 
-			} else if (request instanceof UpdateVendorRequest vendorRequest) {
-				encodedPassword = vendorRequest.password() != null ? bCryptPasswordEncoder.encode(vendorRequest.password()) : null;
-				email = vendorRequest.email();
-				profileImageUrl = vendorRequest.profileImageUrl();
-				userEntity.update(email, encodedPassword, profileImageUrl);
-				userRepository.save(userEntity);
-
-				VendorEntity vendorEntity = vendorRepository.findByUserEntity(userEntity)
-					.orElseThrow(() -> new NotFoundException(
-						HttpStatus.NOT_FOUND.value(),
-						"존재하지 않는 기업 회원입니다."
-					));
-				vendorEntity.update(vendorRequest.businessName(), vendorRequest.phone(), vendorRequest.bank(), vendorRequest.account());
-				vendorRepository.save(vendorEntity);
 			} else {
 				throw new BadRequestException(
 					HttpStatus.BAD_REQUEST.value(),
-					"지원하지 않는 요청 타입입니다."
+					"지원하지 않는 회원 타입입니다."
 				);
 			}
+		} catch (IllegalArgumentException e) {
+			throw new BadRequestException(
+				HttpStatus.BAD_REQUEST.value(),
+				"잘못된 요청 형식입니다."
+			);
 		} catch (OptimisticLockingFailureException e) {
 			throw new ConflictException(
 				HttpStatus.CONFLICT.value(),
