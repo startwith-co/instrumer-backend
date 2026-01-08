@@ -27,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionRequest.*;
@@ -48,9 +49,6 @@ public class SolutionService {
     private final SolutionReviewRepository solutionReviewRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String CREATE_SOLUTION_LOCK_KEY_FMT = "lock:create:solution:%s";
-    private static final long LOCK_TIMEOUT_SECONDS = 10;
-
     @Transactional
     public CreateSolutionResponse create(Long userSeq, CreateSolutionRequest request) {
         if (request.images() == null || request.images().isEmpty()) {
@@ -61,11 +59,11 @@ public class SolutionService {
         }
 
         // Redis 분산 락 획득 시도
-        String lockKey = String.format(CREATE_SOLUTION_LOCK_KEY_FMT, userSeq);
+        String lockValue = UUID.randomUUID().toString();
         Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(
-                lockKey,
-                "locked",
-                Duration.ofSeconds(LOCK_TIMEOUT_SECONDS)
+                "lock:create:solution:" + userSeq,
+                lockValue,
+                Duration.ofSeconds(10)
         );
 
         if (!Boolean.TRUE.equals(lockAcquired)) {
@@ -137,8 +135,12 @@ public class SolutionService {
 
             return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
         } finally {
-            // 락 해제 (성공/실패 관계없이)
-            redisTemplate.delete(lockKey);
+            // 락 값 확인 후 삭제 (본인이 획득한 락만 해제)
+            String lockKey = "lock:create:solution:" + userSeq;
+            String currentLockValue = redisTemplate.opsForValue().get(lockKey);
+            if (lockValue.equals(currentLockValue)) {
+                redisTemplate.delete(lockKey);
+            }
         }
     }
 

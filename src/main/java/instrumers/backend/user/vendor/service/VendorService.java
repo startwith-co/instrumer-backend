@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.util.UUID;
 
 import static instrumers.backend.user.vendor.controller.request.VendorRequest.*;
 
@@ -27,17 +28,14 @@ public class VendorService {
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String REGISTER_LOCK_KEY_FMT = "lock:register:%s";
-    private static final long LOCK_TIMEOUT_SECONDS = 10;
-
     @Transactional
     public void save(RegisterVendorRequest request) {
         // Redis 분산 락 획득 시도
-        String lockKey = String.format(REGISTER_LOCK_KEY_FMT, request.email());
+        String lockValue = UUID.randomUUID().toString();
         Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(
-                lockKey,
-                "locked",
-                Duration.ofSeconds(LOCK_TIMEOUT_SECONDS)
+                "lock:register:" + request.email(),
+                lockValue,
+                Duration.ofSeconds(10)
         );
 
         if (!Boolean.TRUE.equals(lockAcquired)) {
@@ -85,8 +83,12 @@ public class VendorService {
                     e.getMessage()
             );
         } finally {
-            // 락 해제 (성공/실패 관계없이)
-            redisTemplate.delete(lockKey);
+            // 락 값 확인 후 삭제 (본인이 획득한 락만 해제)
+            String lockKey = "lock:register:" + request.email();
+            String currentLockValue = redisTemplate.opsForValue().get(lockKey);
+            if (lockValue.equals(currentLockValue)) {
+                redisTemplate.delete(lockKey);
+            }
         }
     }
 }

@@ -40,6 +40,7 @@ public class UserService {
 
 	private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
+	@Transactional
 	public LoginUserResponse Login(LoginUserRequest request) {
 		UserEntity userEntity = userRepository.findByEmail(request.email())
 			.orElseThrow(() -> new NotFoundException(
@@ -79,7 +80,7 @@ public class UserService {
 				"존재하지 않는 회원입니다."
 			));
 
-		if (commonService.isTokenInWhiteList(userSeq, request.refreshToken())) {
+		if (!commonService.isTokenInWhiteList(userSeq, request.refreshToken())) {
 			throw new UnauthorizedException(
 				HttpStatus.UNAUTHORIZED.value(),
 				"유효하지 않은 Refresh Token입니다."

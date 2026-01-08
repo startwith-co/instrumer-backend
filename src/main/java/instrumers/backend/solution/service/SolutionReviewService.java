@@ -28,6 +28,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionReviewRequest.*;
@@ -44,17 +45,14 @@ public class SolutionReviewService {
     private final VendorRepository vendorRepository;
     private final RedisTemplate<String, String> redisTemplate;
 
-    private static final String CREATE_REVIEW_LOCK_KEY_FMT = "lock:create:review:%s:%s";
-    private static final long LOCK_TIMEOUT_SECONDS = 10;
-
     @Transactional
     public CreateSolutionReviewResponse create(Long userSeq, Long solutionSeq, CreateSolutionReviewRequest request) {
         // Redis 분산 락 획득 시도 (동일 사용자가 동일 솔루션에 중복 리뷰 작성 방지)
-        String lockKey = String.format(CREATE_REVIEW_LOCK_KEY_FMT, userSeq, solutionSeq);
+        String lockValue = UUID.randomUUID().toString();
         Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(
-                lockKey,
-                "locked",
-                Duration.ofSeconds(LOCK_TIMEOUT_SECONDS)
+                "lock:create:review:" + userSeq + ":" + solutionSeq,
+                lockValue,
+                Duration.ofSeconds(10)
         );
 
         if (!Boolean.TRUE.equals(lockAcquired)) {
@@ -94,8 +92,12 @@ public class SolutionReviewService {
 
             return new CreateSolutionReviewResponse(solutionReviewEntity.getSolutionReviewSeq());
         } finally {
-            // 락 해제 (성공/실패 관계없이)
-            redisTemplate.delete(lockKey);
+            // 락 값 확인 후 삭제 (본인이 획득한 락만 해제)
+            String lockKey = "lock:create:review:" + userSeq + ":" + solutionSeq;
+            String currentLockValue = redisTemplate.opsForValue().get(lockKey);
+            if (lockValue.equals(currentLockValue)) {
+                redisTemplate.delete(lockKey);
+            }
         }
     }
 
