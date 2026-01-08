@@ -11,6 +11,7 @@ import instrumers.backend.user.vendor.controller.response.VendorResponse;
 import instrumers.backend.user.vendor.service.VendorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -97,12 +98,53 @@ public class UserPublicController {
 
     @GetMapping("/{userSeq}")
     @Operation(summary = "특정 사용자 정보 조회")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "VENDOR", description = "VENDOR",
-                    content = @Content(schema = @Schema(implementation = GetVendorResponse.class))),
-            @ApiResponse(responseCode = "CONSUMER", description = "CONSUMER",
-                    content = @Content(schema = @Schema(implementation = GetConsumerResponse.class)))
-    })
+    @ApiResponse(
+            responseCode = "200",
+            description = "성공",
+            content = @Content(
+                    mediaType = "application/json",
+                    examples = {
+                            @ExampleObject(
+                                    name = "VENDOR",
+                                    value = """
+                                            {
+                                              "status": 200,
+                                              "message": "SUCCESS",
+                                              "data": {
+                                                "userSeq": 1,
+                                                "email": "vendor@example.com",
+                                                "userType": "VENDOR",
+                                                "profileImageUrl": "https://cdn.example.com/profile.png",
+                                                "businessName": "인스트루머스",
+                                                "managerName": "홍길동",
+                                                "phone": "010-1234-5678",
+                                                "bank": "KB국민은행",
+                                                "account": "123456-01-123456"
+                                              }
+                                            }
+                                            """
+                            ),
+                            @ExampleObject(
+                                    name = "CONSUMER",
+                                    value = """
+                                            {
+                                              "status": 200,
+                                              "message": "SUCCESS",
+                                              "data": {
+                                                "userSeq": 2,
+                                                "email": "consumer@example.com",
+                                                "userType": "CONSUMER",
+                                                "profileImageUrl": "https://cdn.example.com/profile.png",
+                                                "businessName": "테스트컴퍼니",
+                                                "managerName": "김철수",
+                                                "phone": "010-9876-5432"
+                                              }
+                                            }
+                                            """
+                            )
+                    }
+            )
+    )
     public ResponseEntity<BaseResponse<Object>> get(@PathVariable Long userSeq) {
         Object response = userService.get(userSeq);
 
