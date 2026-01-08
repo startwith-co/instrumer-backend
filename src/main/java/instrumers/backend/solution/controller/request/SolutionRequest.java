@@ -49,9 +49,6 @@ public class SolutionRequest {
     }
 
     public record UpdateSolutionRequest(
-            @NotNull(message = "솔루션 SEQ 값은 필수 입력값입니다.")
-            Long solutionSeq,
-
             @NotBlank(message = "솔루션명은 필수 입력값입니다.")
             String name,
 

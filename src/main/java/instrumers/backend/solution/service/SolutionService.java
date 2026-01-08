@@ -31,7 +31,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static instrumers.backend.solution.controller.request.SolutionRequest.*;
-import static instrumers.backend.solution.controller.request.SolutionRequest.CreateSolutionRequest.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionListResponse.*;
 import static instrumers.backend.solution.controller.response.SolutionResponse.GetSolutionResponse.*;
@@ -145,8 +144,8 @@ public class SolutionService {
     }
 
     @Transactional
-    public CreateSolutionResponse update(Long userSeq, UpdateSolutionRequest request) {
-        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(request.solutionSeq())
+    public void update(Long userSeq, Long solutionSeq, UpdateSolutionRequest request) {
+        SolutionEntity solutionEntity = solutionRepository.findBySolutionSeq(solutionSeq)
                 .orElseThrow(() -> new NotFoundException(
                         HttpStatus.NOT_FOUND.value(),
                         "존재하지 않는 솔루션입니다."
@@ -159,40 +158,66 @@ public class SolutionService {
             );
         }
 
-        solutionRepository.delete(solutionEntity);
+        solutionEntity.update(request.name(), request.explanation(), request.category(), request.price(), request.webUrl());
+        solutionRepository.save(solutionEntity);
 
-        CreateSolutionRequest createRequest = new CreateSolutionRequest(
-                request.name(),
-                request.explanation(),
-                request.category(),
-                request.price(),
-                request.webUrl(),
-                request.images() != null ? request.images().stream()
-                        .map(image -> new CreateSolutionImageRequest(
-                                image.imageUrl(),
-                                image.imageType()
-                        ))
-                        .toList() : null,
-                request.plans() != null ? request.plans().stream()
-                        .map(plan -> new CreateSolutionPlanRequest(
-                                plan.name(),
-                                plan.subName(),
-                                plan.price(),
-                                plan.planType(),
-                                plan.details() != null ? plan.details().stream()
-                                        .map(detail -> new CreateSolutionPlanDetailRequest(
-                                                detail.name(),
-                                                detail.context()
-                                        ))
-                                        .toList() : null
-                        ))
-                        .toList() : null,
-                request.keywords()
-        );
+        // Images 삭제 후 재저장
+        solutionImageRepository.deleteAllBySolutionEntity(solutionEntity);
+        if (request.images() != null && !request.images().isEmpty()) {
+            solutionImageRepository.saveAll(
+                    request.images().stream()
+                            .map(image -> SolutionImageEntity.builder()
+                                    .imageUrl(image.imageUrl())
+                                    .imageType(image.imageType())
+                                    .solutionEntity(solutionEntity)
+                                    .build())
+                            .collect(Collectors.toList())
+            );
+        }
 
-        create(userSeq, createRequest);
+        // Plans와 PlanDetails 삭제 후 재저장
+        List<SolutionPlanEntity> existingPlans = solutionPlanRepository.findAllBySolutionEntity(solutionEntity);
+        if (!existingPlans.isEmpty()) {
+            solutionPlanDetailRepository.deleteAll(solutionPlanDetailRepository.findAllBySolutionPlanEntityIn(existingPlans));
+            solutionPlanRepository.deleteAll(existingPlans);
+        }
 
-        return new CreateSolutionResponse(solutionEntity.getSolutionSeq());
+        if (request.plans() != null && !request.plans().isEmpty()) {
+            request.plans().forEach(plan -> {
+                SolutionPlanEntity planEntity = solutionPlanRepository.save(SolutionPlanEntity.builder()
+                        .name(plan.name())
+                        .subName(plan.subName())
+                        .price(plan.price())
+                        .planType(plan.planType())
+                        .solutionEntity(solutionEntity)
+                        .build());
+
+                if (plan.details() != null && !plan.details().isEmpty()) {
+                    solutionPlanDetailRepository.saveAll(
+                            plan.details().stream()
+                                    .map(detail -> SolutionPlanDetailEntity.builder()
+                                            .name(detail.name())
+                                            .context(detail.context())
+                                            .solutionPlanEntity(planEntity)
+                                            .build())
+                                    .collect(Collectors.toList())
+                    );
+                }
+            });
+        }
+
+        // Keywords 삭제 후 재저장
+        solutionKeywordRepository.deleteAllBySolutionEntity(solutionEntity);
+        if (request.keywords() != null && !request.keywords().isEmpty()) {
+            solutionKeywordRepository.saveAll(
+                    request.keywords().stream()
+                            .map(keyword -> SolutionKeywordEntity.builder()
+                                    .keyword(keyword)
+                                    .solutionEntity(solutionEntity)
+                                    .build())
+                            .collect(Collectors.toList())
+            );
+        }
     }
 
     @Transactional(readOnly = true)

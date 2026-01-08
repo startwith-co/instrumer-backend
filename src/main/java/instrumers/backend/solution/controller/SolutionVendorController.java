@@ -21,56 +21,42 @@ import static instrumers.backend.solution.controller.response.SolutionResponse.*
 @Tag(name = "솔루션 API (Vendor)")
 public class SolutionVendorController {
 
-	private final SolutionService solutionService;
+    private final SolutionService solutionService;
 
-	/**
-	 * 솔루션 생성
-	 * - VENDOR 권한 필요
-	 * - 자동으로 현재 로그인한 vendor에 매핑
-	 */
-	@PostMapping
-	@Operation(summary = "솔루션 생성")
-	public ResponseEntity<BaseResponse<CreateSolutionResponse>> createSolution(
-		HttpServletRequest request,
-		@Valid @RequestBody CreateSolutionRequest dto
-	) {
-		Long userSeq = (Long)request.getAttribute("userSeq");
-		CreateSolutionResponse response = solutionService.create(userSeq, dto);
+    @PostMapping
+    @Operation(summary = "솔루션 생성")
+    public ResponseEntity<BaseResponse<CreateSolutionResponse>> createSolution(
+            HttpServletRequest request,
+            @Valid @RequestBody CreateSolutionRequest dto
+    ) {
+        Long userSeq = (Long) request.getAttribute("userSeq");
+        CreateSolutionResponse response = solutionService.create(userSeq, dto);
 
-		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-	}
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
+    }
 
-	/**
-	 * 솔루션 수정
-	 * - VENDOR 권한 필요
-	 * - 소유권 체크: 자신이 생성한 솔루션만 수정 가능
-	 */
-	@PutMapping
-	@Operation(summary = "솔루션 수정")
-	public ResponseEntity<BaseResponse<CreateSolutionResponse>> updateSolution(
-		HttpServletRequest request,
-		@Valid @RequestBody UpdateSolutionRequest dto
-	) {
-		Long userSeq = (Long)request.getAttribute("userSeq");
-		CreateSolutionResponse response = solutionService.update(userSeq, dto);
+    @PutMapping("/{solutionSeq}")
+    @Operation(summary = "솔루션 수정")
+    public ResponseEntity<BaseResponse<String>> updateSolution(
+            HttpServletRequest httpServletRequest,
+            @PathVariable Long solutionSeq,
+            @Valid @RequestBody UpdateSolutionRequest request
+    ) {
+        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+        solutionService.update(userSeq, solutionSeq, request);
 
-		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), response));
-	}
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
+    }
 
-	/**
-	 * 솔루션 삭제
-	 * - VENDOR 권한 필요
-	 * - 소유권 체크: 자신이 생성한 솔루션만 삭제 가능
-	 */
-	@DeleteMapping
-	@Operation(summary = "솔루션 삭제")
-	public ResponseEntity<BaseResponse<String>> deleteSolution(
-		HttpServletRequest request,
-		@RequestParam(value = "solutionSeq") Long solutionSeq
-	) {
-		Long userSeq = (Long)request.getAttribute("userSeq");
-		solutionService.delete(userSeq, solutionSeq);
+    @DeleteMapping("/{solutionSeq}")
+    @Operation(summary = "솔루션 삭제")
+    public ResponseEntity<BaseResponse<String>> deleteSolution(
+            HttpServletRequest httpServletRequest,
+            @PathVariable Long solutionSeq
+    ) {
+        Long userSeq = (Long) httpServletRequest.getAttribute("userSeq");
+        solutionService.delete(userSeq, solutionSeq);
 
-		return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
-	}
+        return ResponseEntity.ok().body(BaseResponse.ofSuccess(HttpStatus.OK.value(), "SUCCESS"));
+    }
 }

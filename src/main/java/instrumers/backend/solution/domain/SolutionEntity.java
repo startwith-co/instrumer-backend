@@ -54,4 +54,12 @@ public class SolutionEntity extends BaseTimeEntity {
     @Builder.Default
     @Column(name = "version", nullable = false, columnDefinition = "INTEGER DEFAULT 0")
     private Integer version = 0;
+
+    public void update(String name, String explanation, String category, Long price, String webUrl) {
+        this.name = name;
+        this.explanation = explanation;
+        this.category = category;
+        this.price = price;
+        this.webUrl = webUrl;
+    }
 }

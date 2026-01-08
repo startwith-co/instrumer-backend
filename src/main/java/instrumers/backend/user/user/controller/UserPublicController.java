@@ -3,11 +3,17 @@ package instrumers.backend.user.user.controller;
 import instrumers.backend.base.BaseResponse;
 import instrumers.backend.common.service.CommonService;
 import instrumers.backend.exception.BadRequestException;
+import instrumers.backend.user.consumer.controller.response.ConsumerResponse;
 import instrumers.backend.user.consumer.service.ConsumerService;
 import instrumers.backend.user.user.controller.response.UserResponse;
 import instrumers.backend.user.user.service.UserService;
+import instrumers.backend.user.vendor.controller.response.VendorResponse;
 import instrumers.backend.user.vendor.service.VendorService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -21,10 +27,12 @@ import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.Map;
 
+import static instrumers.backend.user.consumer.controller.response.ConsumerResponse.*;
 import static instrumers.backend.user.user.controller.request.UserRequest.*;
 import static instrumers.backend.user.user.controller.response.UserResponse.*;
 import static instrumers.backend.user.consumer.controller.request.ConsumerRequest.*;
 import static instrumers.backend.user.vendor.controller.request.VendorRequest.*;
+import static instrumers.backend.user.vendor.controller.response.VendorResponse.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -88,42 +96,13 @@ public class UserPublicController {
     }
 
     @GetMapping("/{userSeq}")
-    @Operation(
-            summary = "특정 사용자 정보 조회",
-            description = """
-                    특정 사용자의 정보를 조회합니다.
-                    
-                    userType에 따라 응답 구조가 달라집니다.
-                    
-                    VENDOR 응답 예시
-                    ```json
-                    {
-                      "userSeq": 1,
-                      "email": "vendor@example.com",
-                      "userType": "VENDOR",
-                      "profileImageUrl": "https://cdn.example.com/profile.png",
-                      "businessName": "인스트루머스",
-                      "managerName": "김대표",
-                      "phone": "010-1234-5678",
-                      "bank": "KB국민은행",
-                      "account": "123456-01-123456"
-                    }
-                    ```
-                    
-                    CONSUMER 응답 예시
-                    ```json
-                    {
-                      "userSeq": 2,
-                      "email": "consumer@example.com",
-                      "userType": "CONSUMER",
-                      "profileImageUrl": "https://cdn.example.com/profile.png",
-                      "businessName": "테스트컴퍼니",
-                      "managerName": "이담당",
-                      "phone": "010-9876-5432"
-                    }
-                    ```
-                    """
-    )
+    @Operation(summary = "특정 사용자 정보 조회")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "VENDOR", description = "VENDOR",
+                    content = @Content(schema = @Schema(implementation = GetVendorResponse.class))),
+            @ApiResponse(responseCode = "CONSUMER", description = "CONSUMER",
+                    content = @Content(schema = @Schema(implementation = GetConsumerResponse.class)))
+    })
     public ResponseEntity<BaseResponse<Object>> get(@PathVariable Long userSeq) {
         Object response = userService.get(userSeq);
 

@@ -10,4 +10,6 @@ import java.util.List;
 @Repository
 public interface SolutionImageRepository extends JpaRepository<SolutionImageEntity, Integer> {
     List<SolutionImageEntity> findAllBySolutionEntity(SolutionEntity solutionEntity);
+
+    void deleteAllBySolutionEntity(SolutionEntity solutionEntity);
 }
